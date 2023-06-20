@@ -48,7 +48,7 @@ function App() {
 
       const auth2 = await gapi.auth2.init({ clientId });
       setLoggedIn(auth2.isSignedIn.get());
-    };a
+    };
     loadGapi();
   }, []);
 
