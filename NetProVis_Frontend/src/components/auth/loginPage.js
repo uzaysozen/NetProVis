@@ -8,14 +8,13 @@ const LoginPage = ({signIn}) => {
     return (
         <div className="login-container">
             <Card className="login-card">
-                <div className="glass-background">
-                    <h1 className="login-title">Login Page</h1>
-                    <img src={LogoImage} alt="Logo" className="logo-image" width={150} height={150}/>
-                    <div className="button-container">
-                        <GoogleButton className="google-button" onClick={signIn}>
-                            Sign In with Google
-                        </GoogleButton>
-                    </div>
+                <img src={LogoImage} alt="Logo" className="logo-image" width={150} height={150}/>
+                <h1 className="login-title">NetProVis</h1>
+                <h3 className="login-subtitle">A k8s cluster provisioning and management tool</h3>
+                <div className="button-container">
+                    <GoogleButton className="google-button" onClick={signIn}>
+                        Sign In with Google
+                    </GoogleButton>
                 </div>
             </Card>
         </div>
