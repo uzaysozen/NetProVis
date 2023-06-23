@@ -1,0 +1,27 @@
+.white-divider {
+    color: white;
+    margin: 34px 0 55px 0;
+    background-color: #aaaaaa;
+}
+
+.hamburger-button  {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    color: white;
+    left: 20px;
+    top: 15px;
+}
+
+.hamburger-icon {
+    color: white;
+}
+
+.custom-menu {
+    background-color: transparent;
+}
+
+.custom-menu .ant-menu-item-selected {
+    background-color: white;
+    color: #444444;
+}

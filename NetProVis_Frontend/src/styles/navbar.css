@@ -1,0 +1,11 @@
+#custom-input {
+    background-color: #444444;
+    color: white;
+    border: none;
+}
+
+
+#custom-input::placeholder {
+    color: #aaaaaa;
+    opacity: 1; /* Firefox */
+}

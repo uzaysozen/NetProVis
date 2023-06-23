@@ -6,7 +6,7 @@ import '../../styles/dashboard.css';
 
 const { Text } = Typography;
 
-const DashboardPage = ({ signOut }) => {
+const ProjectSelect = ({ signOut }) => {
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
 
@@ -75,4 +75,4 @@ const DashboardPage = ({ signOut }) => {
   );
 };
 
-export default DashboardPage;
+export default ProjectSelect;

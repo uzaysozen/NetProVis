@@ -1,77 +1,7 @@
 .dashboard-container {
-  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
   background-color: #f0f2f5;
-  padding: 24px;
-}
-
-.dashboard-title {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 24px;
-}
-
-.sign-out-button {
-  float: right;
-  margin-bottom: 16px;
-}
-
-.projects-card {
-  width: 400px;
-}
-
-.projects-card .ant-card-head {
-  background-color: #001529;
-  color: #ffffff;
-}
-
-.projects-card .ant-card-body {
-  padding: 0;
-}
-
-.projects-card .ant-dropdown-trigger {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.projects-card .ant-dropdown-trigger .ant-btn {
-  width: 100%;
-}
-
-.projects-card .ant-dropdown-trigger .anticon-down {
-  margin-left: 8px;
-}
-
-.project-details-card {
-  margin-top: 20px;
-}
-
-.project-details-card .ant-card-head {
-  background: #001529;
-  color: #fff;
-}
-
-.project-details-card .ant-card-head-title {
-  color: #fff;
-}
-
-.project-details-card .ant-list-item {
-  padding: 8px 0;
-}
-
-.project-details-card .ant-list-item-meta-title {
-  font-weight: bold;
-}
-
-.project-details-card .ant-list-item-meta-description {
-  color: #999;
-}
-
-.project-details-card .ant-list-item-meta-description strong {
-  margin-right: 8px;
 }
