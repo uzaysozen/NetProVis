@@ -1,0 +1,98 @@
+.settings-container {
+    padding: 25px;
+    background-color: #444444;
+    border: none;
+    color: white;
+    height: 55vh;
+    border-radius: 25px;
+    margin-top: 10vh;
+    justify-content: center;
+}
+
+.settings-row {
+    margin-bottom: 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-content {
+    background-color: #232323;
+    color: white;
+    padding: 12px 125px;
+    min-height: 280px;
+}
+
+.settings-icon {
+    margin-right: 8px;
+    font-size: 40px;
+}
+
+.settings-title {
+    color: white !important;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+.settings-subtitle {
+    color: white !important;
+    margin-right: 15px;
+}
+
+.settings-project {
+    color: #fef8a0;
+    font-size: 20px;
+    margin: 15px 15px 0 0;
+}
+
+.settings-project-btn {
+    background-color: #d68227;
+    color: white;
+    width: 16vh;
+    height: 4vh;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 15px;
+    border: none;
+}
+
+.settings-project-btn:hover {
+    color: white !important;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.settings-save-btn {
+    background-color: green;
+    color: white;
+    width: 10vh;
+    height: 4vh;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 15px;
+    border: none;
+}
+
+.settings-save-btn:hover {
+    color: white !important;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.settings-switch {
+    margin: 15px 15px 0 0;
+}
+
+.settings-notification-text {
+    color: white;
+    font-size: 20px;
+    margin: 15px 15px 0 0;
+}
+
+.project-modal {
+    width: 100vh !important;
+}
+

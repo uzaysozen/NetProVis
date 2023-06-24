@@ -37,8 +37,21 @@ def authenticate(token: Token):
     return "Access token: " + str(access_token)
 
 
+@app.get("/user_info")
+def user_info():
+    global access_token
+    # Set the API endpoint and headers
+    endpoint = 'https://www.googleapis.com/oauth2/v3/userinfo'
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(endpoint, headers=headers)
+    response.raise_for_status()  # Raise an exception if the request was unsuccessful
+
+    user = response.json()
+    return user
+
+
 @app.post("/set_project")
-def authenticate(project: Project):
+def set_project(project: Project):
     global project_id
     project_id = project.id
     return "Project id: " + str(project_id)

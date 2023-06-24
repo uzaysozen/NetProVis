@@ -2,7 +2,7 @@ import React from 'react';
 import {Card} from 'antd';
 import GoogleButton from "react-google-button";
 import LogoImage from "../../assets/NetProVis_Logo.png"; // Replace 'logo.png' with your actual logo file
-import '../../styles/loginPage.css';
+import '../../styles/LoginPage.css';
 
 const LoginPage = ({signIn}) => {
     return (

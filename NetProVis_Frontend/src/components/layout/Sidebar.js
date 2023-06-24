@@ -2,18 +2,12 @@ import React, { useState } from 'react';
 import { AlertFilled, BookFilled, ClockCircleFilled, CodepenSquareFilled, EnvironmentFilled, FlagFilled, HomeFilled, MenuOutlined, SettingFilled } from '@ant-design/icons';
 import { Menu, Button, Divider } from 'antd';
 import { Link, useLocation } from 'react-router-dom';
-import '../../styles/sidebar.css';
+import '../../styles/Sidebar.css';
 import Sider from 'antd/es/layout/Sider';
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-
-  const handleMenuClick = (path) => {
-    // Handle menu item click
-    // You can perform additional logic here if needed
-    console.log('Clicked path:', path);
-  };
 
   return (
     <Sider trigger={null} collapsible collapsed={collapsed} style={{ background: '#232323', borderRight: '#aaaaaa solid 1px' }}>
@@ -31,7 +25,6 @@ const Sidebar = () => {
         defaultSelectedKeys={['1']}
         className="custom-menu"
         selectedKeys={[location.pathname]} // Highlight the active menu item based on the current URL
-        onClick={({ key }) => handleMenuClick(key)}
       >
         <Menu.Item key="/dashboard" icon={<HomeFilled />}>
           <Link to="/dashboard">Dashboard</Link>

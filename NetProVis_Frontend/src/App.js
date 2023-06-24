@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
-import LoginPage from "./components/auth/loginPage";
-import DashboardPage from "./components/pages/dashboard";
+import LoginPage from "./components/pages/LoginPage";
+import DashboardPage from "./components/pages/DashboardPage";
 import { useGoogleLogin, useGoogleLogout } from 'react-google-login';
 import {gapi} from "gapi-script";
 import axios from "axios";
 import './styles/App.css';
-import PodsPage from "./components/pages/pods";
-import MainLayout from "./components/layout/layout";
-import TasksPage from "./components/pages/tasks";
-import ReportsPage from "./components/pages/reports";
-import HistoryPage from "./components/pages/hist";
-import AlertsPage from "./components/pages/alerts";
-import MapPage from "./components/pages/map";
-import SettingsPage from "./components/pages/settings";
+import PodsPage from "./components/pages/PodsPage";
+import MainLayout from "./components/layout/Layout";
+import TasksPage from "./components/pages/TasksPage";
+import ReportsPage from "./components/pages/ReportsPage";
+import HistoryPage from "./components/pages/HistoryPage";
+import AlertsPage from "./components/pages/AlertsPage";
+import MapPage from "./components/pages/MapPage";
+import SettingsPage from "./components/pages/SettingsPage";
 
 const clientId = "450951674669-go10vbr709gg2t15s141qeab5kc1snqa.apps.googleusercontent.com";
 
@@ -55,7 +55,8 @@ function App() {
       });
 
       const auth2 = await gapi.auth2.init({ clientId });
-      setLoggedIn(auth2.isSignedIn.get());
+      const res = auth2.isSignedIn.get();
+      setLoggedIn(res);
     };
     loadGapi();
   }, []);

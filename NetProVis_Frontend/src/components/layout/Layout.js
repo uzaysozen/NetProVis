@@ -1,7 +1,7 @@
 import React from "react";
-import Sidebar from "./sidebar";
+import Sidebar from "./Sidebar";
 import {Layout} from "antd";
-import Navbar from "./navbar";
+import Navbar from "./Navbar";
 
 const MainLayout = ({children, signOut}) => {
     return (

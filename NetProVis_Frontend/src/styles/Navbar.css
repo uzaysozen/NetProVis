@@ -1,0 +1,31 @@
+#custom-input {
+    background-color: #444444;
+    color: white;
+    border: none;
+}
+
+
+#custom-input::placeholder {
+    color: #aaaaaa;
+    opacity: 1; /* Firefox */
+}
+
+.avatar-btn {
+    color: #ffffff;
+    margin-top: -12px;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+}
+
+.cluster-btn {
+    color: #ffffff;
+    margin-left: 8px;
+    background-color: transparent;
+    font-size: 20px;
+    font-weight: bold;
+    border: none;
+    outline: none;
+    cursor: pointer;
+}
