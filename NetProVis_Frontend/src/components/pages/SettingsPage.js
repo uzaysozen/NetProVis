@@ -1,9 +1,9 @@
 import React from 'react';
 import '../../styles/SettingsPage.css';
-import {Content} from "antd/es/layout/layout";
-import {Button, Col, Row, Switch} from "antd";
-import {SettingFilled} from "@ant-design/icons";
-import {Typography} from 'antd';
+import { Content } from "antd/es/layout/layout";
+import { Col, Row, Switch } from "antd";
+import { SettingFilled } from "@ant-design/icons";
+import { Typography } from 'antd';
 import ProjectSelectModal from "../modals/ProjectSelectModal";
 
 const {Title, Text} = Typography;
@@ -26,8 +26,6 @@ const SettingsPage = () => {
                     <Row className="settings-row">
                         <Col>
                             <span className="settings-span">
-                                <Title level={3} className="settings-subtitle">Current Project: </Title>
-                                <Text className="settings-project">my_project</Text>
                                 <ProjectSelectModal/>
                             </span>
                         </Col>
@@ -40,13 +38,6 @@ const SettingsPage = () => {
                                 <Text className="settings-notification-text">In App</Text>
                                 <Switch defaultChecked className="settings-switch"/>
                                 <Text className="settings-notification-text">Email</Text>
-                            </span>
-                        </Col>
-                    </Row>
-                    <Row className="settings-row">
-                        <Col>
-                            <span className="settings-span">
-                                <Button className="settings-save-btn">Save</Button>
                             </span>
                         </Col>
                     </Row>
