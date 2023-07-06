@@ -52,7 +52,7 @@ const Navbar = ({signOut}) => {
     );
 
     return (
-        <Header style={{backgroundColor: "#232323", height: "8vh", borderBottom: "#aaaaaa solid 1px"}}>
+        <Header style={{backgroundColor: "#232323"}}>
             <div style={{display: "flex", alignItems: "center", justifyContent: "space-between"}}>
                 <div style={{display: "flex", alignItems: "center"}}>
                     <img src={LogoImage} alt="Logo" width={50} height={50} style={{marginRight: "8px"}}/>

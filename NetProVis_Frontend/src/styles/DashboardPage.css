@@ -1,7 +1,23 @@
+.dashboard-content {
+    background-color: #232323;
+    color: white;
+    padding: 12px 50px;
+    min-height: 280px;
+}
+
 .dashboard-container {
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background-color: #f0f2f5;
+    padding: 25px;
+    background-color: #444444;
+    border: #888888 solid 1px;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 25px;
+    margin-top: 4vh;
+    justify-content: center;
+}
+
+.dashboard-title {
+    color: white !important;
+    font-weight: bold;
+    margin-top: 15px;
 }

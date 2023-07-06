@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import axios from 'axios';
-import { Tag, Table, Modal, Button } from 'antd';
-import { Typography } from 'antd';
+import {Tag, Table, Modal, Button, Row, Col} from 'antd';
+import {Typography} from 'antd';
 
 const {Title, Text} = Typography;
 
-const ProjectSelectModal = () => {
+const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
     const [projects, setProjects] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProject, setSelectedProject] = useState('');
@@ -17,6 +17,9 @@ const ProjectSelectModal = () => {
     const handleOk = () => {
         setIsModalOpen(false);
         localStorage.setItem('selectedProject', selectedProject)
+        if (isDashboard) {
+            onDashboardReload(true)
+        }
     };
 
     const handleCancel = () => {
@@ -90,18 +93,44 @@ const ProjectSelectModal = () => {
             });
     }, []);
 
-    return (
-        <>
-            <Title level={3} className="settings-subtitle">Current Project: </Title>
-            <Text className="settings-project">{selectedProject}</Text>
-            <Modal className="project-modal" title="Choose Project:" open={isModalOpen} onOk={handleOk}
-                   onCancel={handleCancel}>
-                <Table columns={columns} dataSource={projects}
-                       rowSelection={{type: 'radio', onChange: handleProjectSelect}}/>
-            </Modal>
-            <Button className="settings-project-btn" onClick={showModal}>Change Project</Button>
-        </>
-    );
+    if (isDashboard) {
+        return (
+            <>
+                <Modal className="project-modal" title="Choose Project:" open={isModalOpen} onOk={handleOk}
+                       onCancel={handleCancel}>
+                    <Table columns={columns} dataSource={projects}
+                           rowSelection={{type: 'radio', onChange: handleProjectSelect}}/>
+                </Modal>
+                <Row>
+                    <Col style={{marginTop: "10vh"}}>
+                        <Row className="settings-row">
+                            <Col>
+                                <Title level={1} className="settings-title"> You have not selected a project... </Title>
+                            </Col>
+                        </Row>
+                        <Row className="settings-row">
+                            <Col>
+                                <Button className="settings-project-btn" onClick={showModal}>Choose a Project</Button>
+                            </Col>
+                        </Row>
+                    </Col>
+                </Row>
+            </>
+        );
+    } else {
+        return (
+            <>
+                <Title level={3} className="settings-subtitle">Current Project: </Title>
+                <Text className="settings-project">{selectedProject}</Text>
+                <Modal className="project-modal" title="Choose Project:" open={isModalOpen} onOk={handleOk}
+                       onCancel={handleCancel}>
+                    <Table columns={columns} dataSource={projects}
+                           rowSelection={{type: 'radio', onChange: handleProjectSelect}}/>
+                </Modal>
+                <Button className="settings-project-btn" onClick={showModal}>Change Project</Button>
+            </>
+        );
+    }
 };
 
 export default ProjectSelectModal;

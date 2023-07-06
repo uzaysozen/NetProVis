@@ -1,12 +1,13 @@
 .settings-container {
     padding: 25px;
     background-color: #444444;
-    border: none;
     color: white;
     height: 55vh;
     border-radius: 25px;
     margin-top: 10vh;
     justify-content: center;
+    border: #888888 solid 1px;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
 }
 
 .settings-row {
@@ -37,6 +38,7 @@
     color: white !important;
     font-weight: bold;
     margin-top: 15px;
+    user-select: none;
 }
 
 .settings-subtitle {
@@ -53,8 +55,8 @@
 .settings-project-btn {
     background-color: #d68227;
     color: white;
-    width: 16vh;
-    height: 4vh;
+    /*width: 16vh;*/
+    height: 5vh;
     font-size: 16px;
     font-weight: bold;
     margin-top: 15px;

@@ -26,7 +26,7 @@ const SettingsPage = () => {
                     <Row className="settings-row">
                         <Col>
                             <span className="settings-span">
-                                <ProjectSelectModal/>
+                                <ProjectSelectModal isDashboard={false}/>
                             </span>
                         </Col>
                     </Row>

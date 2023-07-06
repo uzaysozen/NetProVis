@@ -7,7 +7,7 @@
 
 #custom-input::placeholder {
     color: #aaaaaa;
-    opacity: 1; /* Firefox */
+    opacity: 1;
 }
 
 .avatar-btn {

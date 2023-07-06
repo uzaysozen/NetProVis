@@ -14,11 +14,13 @@ import HistoryPage from "./components/pages/HistoryPage";
 import AlertsPage from "./components/pages/AlertsPage";
 import MapPage from "./components/pages/MapPage";
 import SettingsPage from "./components/pages/SettingsPage";
+import LoadingScreen from "./components/screens/LoadingScreen";
 
 const clientId = "450951674669-go10vbr709gg2t15s141qeab5kc1snqa.apps.googleusercontent.com";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const onSuccess = (response) => {
     // Handle successful login
@@ -54,17 +56,30 @@ function App() {
         gapi.load('auth2', resolve);
       });
 
-      const auth2 = await gapi.auth2.init({ clientId });
-      const res = auth2.isSignedIn.get();
-      setLoggedIn(res);
+      const auth2 = await gapi.auth2.getAuthInstance({ clientId });
+      if (auth2) {
+        const res = auth2.isSignedIn.get();
+        setLoggedIn(res);
+        setIsLoading(false); // Set loading state to false when authentication check is complete
+      } else {
+        setLoggedIn(false)
+        setIsLoading(false); // Set loading state to false when authentication check is complete
+      }
+
+
+
     };
     loadGapi();
   }, []);
 
+  if (isLoading) {
+    return <LoadingScreen />; // Replace with your loading screen component
+  }
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route exact path="/" element={loggedIn ? <Navigate to="/dashboard" /> : <LoginPage signIn={signIn} />} />
+        <Route exact path="/" element={ loggedIn ? <Navigate to="/dashboard" /> : <LoginPage signIn={signIn} />}/>
         <Route path="/dashboard" element={loggedIn ?  <MainLayout signOut={signOut} children={<DashboardPage/>} /> : <Navigate to="/" />} />
         <Route path="/pods" element={loggedIn ?  <MainLayout signOut={signOut} children={<PodsPage/>} /> : <Navigate to="/" />} />
         <Route path="/tasks" element={loggedIn ?  <MainLayout signOut={signOut} children={<TasksPage/>} /> : <Navigate to="/" />} />
