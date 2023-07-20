@@ -1,6 +1,6 @@
 import React from 'react';
 import '../../styles/DashboardPage.css';
-import { Content } from "antd/es/layout/layout";
+import {Content} from "antd/es/layout/layout";
 
 const PodsPage = () => {
 

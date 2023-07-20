@@ -9,6 +9,7 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
     const [projects, setProjects] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProject, setSelectedProject] = useState('');
+    const [reloadComponent, setReloadComponent] = useState(false);
 
     const showModal = () => {
         setIsModalOpen(true);
@@ -20,6 +21,7 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
         if (isDashboard) {
             onDashboardReload(true)
         }
+        setReloadComponent(!reloadComponent);
     };
 
     const handleCancel = () => {
@@ -27,8 +29,8 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
     };
 
     const handleProjectSelect = (selectedRowKeys, selectedRows) => {
-        const projectName = selectedRows.length > 0 ? selectedRows[0].name : '';
-        setSelectedProject(projectName);
+        const project = selectedRows.length > 0 ? JSON.stringify(selectedRows[0])  : '';
+        setSelectedProject(project);
     };
 
     const columns = [
@@ -73,7 +75,7 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
     ];
 
     useEffect(() => {
-        const storedProject = localStorage.getItem('selectedProject');
+        const storedProject = JSON.parse(localStorage.getItem('selectedProject'));
         if (storedProject) {
             setSelectedProject(storedProject);
         }
@@ -91,7 +93,7 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
             .catch(error => {
                 console.log('Error:', error);
             });
-    }, []);
+    }, [reloadComponent]);
 
     if (isDashboard) {
         return (
@@ -118,10 +120,11 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
             </>
         );
     } else {
+        console.log('Project:', selectedProject);
         return (
             <>
                 <Title level={3} className="settings-subtitle">Current Project: </Title>
-                <Text className="settings-project">{selectedProject}</Text>
+                <Text className="settings-project">{selectedProject.name}</Text>
                 <Modal className="project-modal" title="Choose Project:" open={isModalOpen} onOk={handleOk}
                        onCancel={handleCancel}>
                     <Table columns={columns} dataSource={projects}

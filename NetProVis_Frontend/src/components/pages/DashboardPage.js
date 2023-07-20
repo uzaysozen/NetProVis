@@ -2,12 +2,24 @@ import React, {useEffect, useState} from 'react';
 import '../../styles/DashboardPage.css';
 import {Content} from "antd/es/layout/layout";
 import {Col, Row} from "antd";
-import { Typography } from 'antd';
 import ProjectSelectModal from "../modals/ProjectSelectModal";
-const {Title, Text} = Typography;
+import ProjectContainer from "./dashboard/projectContainer";
+import PodsContainer from "./dashboard/podsContainer";
+import ResourcesContainer from "./dashboard/resourcesContainer";
+import TasksContainer from "./dashboard/tasksContainer";
+import BigResourceChart from "./dashboard/bigChart";
 
 const DashboardPage = () => {
-    const storedProject = localStorage.getItem('selectedProject');
+    const storedProject = JSON.parse(localStorage.getItem('selectedProject'));
+    console.log(storedProject)
+    let storedProjectID;
+    let storedProjectState;
+    let storedProjectNumber;
+    if (storedProject) {
+        storedProjectID = storedProject.name;
+        storedProjectNumber = storedProject.projectNumber;
+        storedProjectState = storedProject.lifecycleState;
+    }
     const [reload, setReload] = useState(false);
 
     const handleReload = (value) => {
@@ -26,33 +38,33 @@ const DashboardPage = () => {
                 <Row gutter={24}>
                     <Col className="gutter-row" span={6}>
                         <Row className="dashboard-container">
-                            <Col>
-                                <Title level={2} className="dashboard-title">
-                                    {storedProject}
-                                </Title>
-                            </Col>
+                            <ProjectContainer
+                                storedProjectID={storedProjectID}
+                                storedProjectNumber={storedProjectNumber}
+                                storedProjectState={storedProjectState}
+                            />
                         </Row>
                     </Col>
                     <Col className="gutter-row" span={6}>
                         <Row className="dashboard-container">
-
+                            <PodsContainer/>
                         </Row>
                     </Col>
                     <Col className="gutter-row" span={6}>
                         <Row className="dashboard-container">
-
+                            <ResourcesContainer/>
                         </Row>
                     </Col>
                     <Col className="gutter-row" span={6}>
                         <Row className="dashboard-container">
-
+                            <TasksContainer/>
                         </Row>
                     </Col>
                 </Row>
                 <Row gutter={24}>
                     <Col className="gutter-row" span={15}>
                         <Row className="dashboard-container">
-
+                            <BigResourceChart/>
                         </Row>
                     </Col>
                     <Col className="gutter-row" span={9}>

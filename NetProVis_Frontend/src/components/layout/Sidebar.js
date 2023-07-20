@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { AlertFilled, BookFilled, ClockCircleFilled, CodepenSquareFilled, EnvironmentFilled, FlagFilled, HomeFilled, MenuOutlined, SettingFilled } from '@ant-design/icons';
+import {
+  AlertFilled,
+  BookFilled,
+  ClockCircleFilled,
+  CodepenSquareFilled,
+  DashboardFilled,
+  EnvironmentFilled,
+  FlagFilled,
+  HomeFilled,
+  MenuOutlined,
+  SettingFilled
+} from '@ant-design/icons';
 import { Menu, Button, Divider } from 'antd';
 import { Link, useLocation } from 'react-router-dom';
 import '../../styles/Sidebar.css';
@@ -10,7 +21,7 @@ const Sidebar = () => {
   const location = useLocation();
 
   return (
-    <Sider trigger={null} collapsible collapsed={collapsed} style={{ background: '#232323', borderRight: '#aaaaaa solid 1px' }}>
+    <Sider trigger={null} collapsible collapsed={collapsed} style={{ background: '#232323', borderRight: '#524b4a solid 1px' }}>
       <Button
         className="hamburger-button"
         type="text"
@@ -26,7 +37,7 @@ const Sidebar = () => {
         className="custom-menu"
         selectedKeys={[location.pathname]} // Highlight the active menu item based on the current URL
       >
-        <Menu.Item key="/dashboard" icon={<HomeFilled />}>
+        <Menu.Item key="/dashboard" icon={<DashboardFilled />}>
           <Link to="/dashboard">Dashboard</Link>
         </Menu.Item>
         <Menu.Item key="/pods" icon={<CodepenSquareFilled />}>
