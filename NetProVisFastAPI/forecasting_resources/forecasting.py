@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import tensorflow as tf
 import os
 import matplotlib.pyplot as plt
 from keras.models import Sequential, load_model
@@ -11,14 +12,26 @@ from keras.losses import MeanSquaredError
 from keras.metrics import RootMeanSquaredError
 from keras.optimizers import Adam
 from keras.backend import clear_session
+from keras import backend
+from keras.utils import get_custom_objects
 
-N_LOOKBACK = 48
-N_FORECAST = 24
+ONE_HOUR_PERIOD = 12
+N_LOOKBACK = 4 * ONE_HOUR_PERIOD
+N_FORECAST = 2 * ONE_HOUR_PERIOD
+MIN_WINDOW = N_LOOKBACK + N_FORECAST + ONE_HOUR_PERIOD
+
+
+def swish(x, beta=1):
+    return backend.sigmoid(beta * x) * x
+
+
+get_custom_objects().update({'swish': swish})
 
 
 # 1. Preparing data
 def prepare_data(file_name, date_col_name, target_col_name):
     df = pd.read_csv(file_name)
+    df = df[-MIN_WINDOW:]
 
     # Set timestamp as index
     df.index = pd.to_datetime(df[date_col_name])
@@ -56,13 +69,13 @@ def generate_input_output_sequences(target_col):
 def train_model(model_path, x_train, y_train, val_data):
     # building model
     model = Sequential()
-    #model.add(GRU(units=64, return_sequences=True, input_shape=(N_LOOKBACK, 1)))
-    #model.add(GRU(units=32))
-    #model.add(Dense(N_FORECAST))
+    # model.add(GRU(units=64, return_sequences=True, input_shape=(N_LOOKBACK, 1)))
+    # model.add(GRU(units=32))
+    # model.add(Dense(N_FORECAST))
     model.add(InputLayer((N_LOOKBACK, 1)))
-    model.add(LSTM(64))
-    model.add(Dense(8, 'relu'))
-    model.add(Dense(N_FORECAST, 'linear'))
+    model.add(LSTM(200, return_sequences=True))
+    model.add(LSTM(150, activation='relu'))
+    model.add(Dense(N_FORECAST, activation='swish'))
     # configure callback functions
     cp = ModelCheckpoint(model_path, save_best_only=True)
     es = EarlyStopping(monitor='val_root_mean_squared_error', mode='min', patience=5)
@@ -134,19 +147,19 @@ if __name__ == "__main__":
 
     print(cpu_forecast_data_list)
     # plot the results
-    cpu_forecast_results[-312:].plot(title='CPU Usage')
+    cpu_forecast_results[-MIN_WINDOW:].plot(title='CPU Usage')
     plt.show()
 
     # Memory Forecasting
-    # clear_session()
-    # memory_forecast_results, memory_forecast_data_list = forecast(
-    #     file_name=file_path,
-    #     date_column_name='timestamp',
-    #     target_column_name='memory_usage',
-    #     model_path='../model_memory/model_memory.h5'
-    # )
-    #
-    # print(memory_forecast_data_list)
-    # # plot the results
-    # memory_forecast_results[-312:].plot(title='Memory Usage')
-    # plt.show()
+    clear_session()
+    memory_forecast_results, memory_forecast_data_list = forecast(
+        file_name=file_path,
+        date_column_name='timestamp',
+        target_column_name='memory_usage',
+        model_path='../model_memory/model_memory.h5'
+    )
+
+    print(memory_forecast_data_list)
+    # plot the results
+    memory_forecast_results[-312:].plot(title='Memory Usage')
+    plt.show()
