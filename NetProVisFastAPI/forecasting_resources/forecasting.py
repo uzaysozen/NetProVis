@@ -14,6 +14,7 @@ from keras.optimizers import Adam
 from keras.backend import clear_session
 from keras import backend
 from keras.utils import get_custom_objects
+from sklearn.metrics import mean_absolute_percentage_error
 
 ONE_HOUR_PERIOD = 12
 N_LOOKBACK = 4 * ONE_HOUR_PERIOD
@@ -31,7 +32,7 @@ get_custom_objects().update({'swish': swish})
 # 1. Preparing data
 def prepare_data(file_name, date_col_name, target_col_name):
     df = pd.read_csv(file_name)
-    df = df[-MIN_WINDOW:]
+    df = df[-(MIN_WINDOW + N_FORECAST):-N_FORECAST]
 
     # Set timestamp as index
     df.index = pd.to_datetime(df[date_col_name])
@@ -133,6 +134,12 @@ def forecast(file_name, date_column_name, target_column_name, model_path):
     return results, forecasted_data_list
 
 
+def get_mape(file_path, forecast, target_column):
+    actual = pd.read_csv(file_path)[target_column][-N_FORECAST:]
+    mape = mean_absolute_percentage_error(actual, forecast) * 100
+    print("{} MAPE: {:.2f}%".format(target_column, mape))
+
+
 if __name__ == "__main__":
     # CPU Forecasting
     clear_session()
@@ -144,8 +151,6 @@ if __name__ == "__main__":
         target_column_name='cpu_usage',
         model_path='../model_cpu/model_cpu.h5'
     )
-
-    print(cpu_forecast_data_list)
     # plot the results
     cpu_forecast_results[-MIN_WINDOW:].plot(title='CPU Usage')
     plt.show()
@@ -161,5 +166,8 @@ if __name__ == "__main__":
 
     print(memory_forecast_data_list)
     # plot the results
-    memory_forecast_results[-312:].plot(title='Memory Usage')
+    memory_forecast_results[-MIN_WINDOW:].plot(title='Memory Usage')
     plt.show()
+
+    get_mape(file_path=file_path, forecast=cpu_forecast_data_list, target_column='cpu_usage')
+    get_mape(file_path=file_path, forecast=memory_forecast_data_list, target_column='memory_usage')
