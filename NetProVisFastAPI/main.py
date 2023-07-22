@@ -6,6 +6,7 @@ import requests
 app = FastAPI()
 access_token = ""
 project_id = ""
+cluster_name = ""
 
 # Configure CORS
 origins = [
@@ -28,6 +29,10 @@ class Token(BaseModel):
 
 class Project(BaseModel):
     id: str
+
+
+class GKECluster(BaseModel):
+    name: str
 
 
 @app.post("/authenticate")
@@ -57,6 +62,13 @@ def set_project(project: Project):
     return "Project id: " + str(project_id)
 
 
+@app.post("/set_cluster")
+def set_cluster(cluster: GKECluster):
+    global cluster_name
+    cluster_name = cluster.name
+    return "Cluster name: " + str(cluster_name)
+
+
 @app.get("/projects")
 def get_projects():
     global access_token
@@ -81,7 +93,7 @@ def get_projects():
 def get_clusters():
     global access_token, project_id
     # Set the API endpoint and headers
-    endpoint = f"https://container.googleapis.com/v1/projects/{project_id}/locations/-/clusters"
+    endpoint = f"https://container.googleapis.com/v1beta1/projects/{str(project_id)}/locations/-/clusters"
     headers = {"Authorization": f"Bearer {access_token}"}
 
     # Replace {project_id} with your GCP project ID

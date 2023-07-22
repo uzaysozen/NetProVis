@@ -36,6 +36,7 @@ function App() {
   const onLogoutSuccess = () => {
     // Handle successful logout
     setLoggedIn(false);
+    localStorage.removeItem('selectedProject')
   };
 
   const { signIn } = useGoogleLogin({

@@ -15,12 +15,24 @@ const {Header} = Layout;
 
 const Navbar = ({signOut}) => {
     const [user, setUser] = useState([]);
+    const [clusters, setClusters] = useState([]);
+    const [clusterName, setClusterName] = useState([]);
 
     useEffect(() => {
         axios
             .get('http://localhost:8000/user_info')
             .then(response => {
                 setUser(response.data);
+            })
+            .catch(error => {
+                console.log('Error:', error);
+            });
+
+        axios
+            .get('http://localhost:8000/clusters')
+            .then(response => {
+                setClusters(response.data);
+                //console.log(response.data)
             })
             .catch(error => {
                 console.log('Error:', error);
@@ -43,16 +55,29 @@ const Navbar = ({signOut}) => {
             </Menu.Item>
         </Menu>
     );
-
+    const handleClusterMenuClick = (cluster) => {
+        axios
+            .post('http://localhost:8000/set_cluster', {name: cluster.name})
+            .then(response => {
+                setClusterName(cluster.name)
+                console.log(response.data)
+            })
+            .catch(error => {
+                console.log('Error:', error);
+            });
+      };
     const clusterMenu = (
         <Menu>
-            <Menu.Item key="1">cluster-1</Menu.Item>
-            <Menu.Item key="2">cluster-2</Menu.Item>
+            {clusters.map((cluster, index) => (
+                <Menu.Item key={index + 1} onClick={() => handleClusterMenuClick(cluster)}>
+                  {cluster.name}
+                </Menu.Item>
+              ))}
         </Menu>
     );
 
     return (
-        <Header style={{backgroundColor: "#232323"}}>
+        <Header style={{backgroundColor: "#232323", height: "10%"}}>
             <div style={{display: "flex", alignItems: "center", justifyContent: "space-between"}}>
                 <div style={{display: "flex", alignItems: "center"}}>
                     <img src={LogoImage} alt="Logo" width={50} height={50} style={{marginRight: "8px"}}/>
@@ -61,7 +86,7 @@ const Navbar = ({signOut}) => {
                         <button
                             className="cluster-btn"
                             onClick={(e) => e.preventDefault()}>
-                            Your Cluster <DownOutlined style={{marginLeft: "4px", fontSize: "20px"}}/>
+                            {clusterName} <DownOutlined style={{marginLeft: "4px", fontSize: "20px"}}/>
                         </button>
                     </Dropdown>
                 </div>

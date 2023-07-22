@@ -5,11 +5,10 @@ import {Typography} from 'antd';
 
 const {Title, Text} = Typography;
 
-const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
+const ProjectSelectModal = ({isDashboard, onDashboardReload, navbarReload}) => {
     const [projects, setProjects] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProject, setSelectedProject] = useState('');
-    const [reloadComponent, setReloadComponent] = useState(false);
 
     const showModal = () => {
         setIsModalOpen(true);
@@ -21,7 +20,18 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
         if (isDashboard) {
             onDashboardReload(true)
         }
-        setReloadComponent(!reloadComponent);
+        if (selectedProject) {
+            axios
+            .post('http://localhost:8000/set_project', {id: JSON.parse(selectedProject).projectId})
+            .then(response => {
+                console.log(response)
+            })
+            .catch(error => {
+                console.log('Error:', error);
+            });
+        }
+        JSON.stringify(selectedProject);
+        window.location.reload()
     };
 
     const handleCancel = () => {
@@ -93,7 +103,7 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
             .catch(error => {
                 console.log('Error:', error);
             });
-    }, [reloadComponent]);
+    }, []);
 
     if (isDashboard) {
         return (
@@ -120,7 +130,6 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
             </>
         );
     } else {
-        console.log('Project:', selectedProject);
         return (
             <>
                 <Title level={3} className="settings-subtitle">Current Project: </Title>
