@@ -22,7 +22,7 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload, navbarReload}) => {
         }
         if (selectedProject) {
             axios
-            .post('http://localhost:8000/set_project', {id: JSON.parse(selectedProject).projectId})
+            .post('http://localhost:8000/set_project', {selected_project: selectedProject})
             .then(response => {
                 console.log(response)
             })
@@ -30,7 +30,6 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload, navbarReload}) => {
                 console.log('Error:', error);
             });
         }
-        JSON.stringify(selectedProject);
         window.location.reload()
     };
 

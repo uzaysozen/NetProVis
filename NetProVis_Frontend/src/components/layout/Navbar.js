@@ -57,7 +57,7 @@ const Navbar = ({signOut}) => {
     );
     const handleClusterMenuClick = (cluster) => {
         axios
-            .post('http://localhost:8000/set_cluster', {name: cluster.name})
+            .post('http://localhost:8000/set_cluster', {selected_cluster: JSON.stringify(cluster)})
             .then(response => {
                 setClusterName(cluster.name)
                 console.log(response.data)

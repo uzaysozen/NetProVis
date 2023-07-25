@@ -5,7 +5,7 @@ import {FolderOpenFilled} from "@ant-design/icons";
 const {Title, Text} = Typography;
 
 
-const ProjectContainer = ({storedProjectID, storedProjectNumber, storedProjectState}) => {
+const ProjectContainer = ({storedProjectName, storedProjectID, storedProjectState}) => {
     const stateColors = {
         ACTIVE: '#09db41',
         DELETE_REQUESTED: '#ed1607',
@@ -26,14 +26,14 @@ const ProjectContainer = ({storedProjectID, storedProjectNumber, storedProjectSt
             </Row>
             <Row>
                 <span>
-                    <Text className="dashboard-label">Project ID: </Text>
-                    <Text className="dashboard-text" style={{marginLeft:"6vh"}}>{storedProjectID}</Text>
+                    <Text className="dashboard-label">Project Name: </Text>
+                    <Text className="dashboard-text" style={{marginLeft:"6vh"}}>{storedProjectName}</Text>
                 </span>
             </Row>
             <Row>
                 <span>
-                    <Text className="dashboard-label">Project Number: </Text>
-                    <Text className="dashboard-text">{storedProjectNumber}</Text>
+                    <Text className="dashboard-label">Project ID: </Text>
+                    <Text className="dashboard-text">{storedProjectID}</Text>
                 </span>
             </Row>
             <Row>

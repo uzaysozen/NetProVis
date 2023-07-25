@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import requests
+from NetProVisFastAPI.models.api_models import *
+from NetProVisFastAPI.util.helper_functions import *
+import json
 
 app = FastAPI()
 access_token = ""
-project_id = ""
-cluster_name = ""
+project = {}
+cluster = {}
 
 # Configure CORS
 origins = [
@@ -21,18 +22,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-class Token(BaseModel):
-    value: str
-
-
-class Project(BaseModel):
-    id: str
-
-
-class GKECluster(BaseModel):
-    name: str
 
 
 @app.post("/authenticate")
@@ -56,17 +45,17 @@ def user_info():
 
 
 @app.post("/set_project")
-def set_project(project: Project):
-    global project_id
-    project_id = project.id
-    return "Project id: " + str(project_id)
+def set_project(p: Project):
+    global project
+    project = json.loads(p.selected_project)
+    return project
 
 
 @app.post("/set_cluster")
-def set_cluster(cluster: GKECluster):
-    global cluster_name
-    cluster_name = cluster.name
-    return "Cluster name: " + str(cluster_name)
+def set_cluster(c: GKECluster):
+    global cluster
+    cluster = json.loads(c.selected_cluster)
+    return cluster
 
 
 @app.get("/projects")
@@ -91,13 +80,10 @@ def get_projects():
 
 @app.get("/clusters")
 def get_clusters():
-    global access_token, project_id
+    global access_token, project
     # Set the API endpoint and headers
-    endpoint = f"https://container.googleapis.com/v1beta1/projects/{str(project_id)}/locations/-/clusters"
+    endpoint = f"https://container.googleapis.com/v1beta1/projects/{project['projectId']}/locations/-/clusters"
     headers = {"Authorization": f"Bearer {access_token}"}
-
-    # Replace {project_id} with your GCP project ID
-    endpoint = endpoint.format(project_id=project_id)
 
     # Make the API request
     response = requests.get(endpoint, headers=headers)
@@ -105,8 +91,20 @@ def get_clusters():
 
     # Get the list of clusters from the response
     clusters = response.json().get("clusters", [])
-
-    # Process the clusters
-    # Do something with the clusters
-
     return clusters
+
+
+@app.post("/get_cluster_cpu")
+def get_cluster_cpu():
+    global project, access_token
+    query = "fetch kubernetes.io/node/cpu/allocatable_utilization  | within (5m)"
+    average_cpu_usage = get_cluster_resource_usage(access_token, project['projectId'], query)
+    return average_cpu_usage
+
+
+@app.post("/get_cluster_memory")
+def get_cluster_memory():
+    global project, access_token
+    query = "fetch kubernetes.io/node/memory/allocatable_utilization  | within (5m)"
+    average_cpu_usage = get_cluster_resource_usage(access_token, project['projectId'], query)
+    return average_cpu_usage

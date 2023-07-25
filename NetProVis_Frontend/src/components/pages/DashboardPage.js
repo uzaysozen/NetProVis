@@ -14,10 +14,10 @@ const DashboardPage = () => {
     console.log(storedProject)
     let storedProjectID;
     let storedProjectState;
-    let storedProjectNumber;
+    let storedProjectName;
     if (storedProject) {
-        storedProjectID = storedProject.name;
-        storedProjectNumber = storedProject.projectNumber;
+        storedProjectName = storedProject.name;
+        storedProjectID = storedProject.projectId;
         storedProjectState = storedProject.lifecycleState;
     }
     const [reload, setReload] = useState(false);
@@ -39,8 +39,8 @@ const DashboardPage = () => {
                     <Col className="gutter-row" span={6}>
                         <Row className="dashboard-container">
                             <ProjectContainer
+                                storedProjectName={storedProjectName}
                                 storedProjectID={storedProjectID}
-                                storedProjectNumber={storedProjectNumber}
                                 storedProjectState={storedProjectState}
                             />
                         </Row>
