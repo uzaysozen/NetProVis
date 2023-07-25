@@ -34,9 +34,9 @@ def get_cluster_resource_usage(access_token, project_id, query):
             res_usage_series.append(res_usage)
         res_usage_values.append(sum(res_usage_series) / len(res_usage_series))
     # Calculate the average CPU usage for each label value
-    average_cpu_usage = sum(res_usage_values) / len(res_usage_values)
+    average_res_usage = sum(res_usage_values) / len(res_usage_values)
 
     print("Average Resource Usage for Each Label Value:")
-    print("{}: {:.2%}".format(query.split(' ')[1], average_cpu_usage))
+    print("{}: {:.2%}".format(query.split(' ')[1], average_res_usage))
 
-    return average_cpu_usage * 100
+    return average_res_usage * 100
