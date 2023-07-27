@@ -1,8 +1,7 @@
 import React from 'react';
-import {Spin} from "antd";
 import {LoadingOutlined} from "@ant-design/icons";
 
-const TasksPage = () => {
+const LoadingScreen = ({loadingText}) => {
 
     return (
         <div style={{
@@ -19,9 +18,9 @@ const TasksPage = () => {
                 }}
                 spin
             />
-            <span style={{marginLeft: "20px", fontSize: "30px"}}>Loading...</span>
+            <span style={{marginLeft: "20px", fontSize: "30px"}}>{loadingText}</span>
         </div>
     );
 }
 
-export default TasksPage;
+export default LoadingScreen;

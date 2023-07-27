@@ -65,14 +65,14 @@ const Navbar = ({signOut}) => {
             .catch(error => {
                 console.log('Error:', error);
             });
-      };
+    };
     const clusterMenu = (
         <Menu>
             {clusters.map((cluster, index) => (
                 <Menu.Item key={index + 1} onClick={() => handleClusterMenuClick(cluster)}>
-                  {cluster.name}
+                    {cluster.name}
                 </Menu.Item>
-              ))}
+            ))}
         </Menu>
     );
 
@@ -98,11 +98,8 @@ const Navbar = ({signOut}) => {
                     <Button type="text" style={{color: "#ffffff", fontSize: "16px", marginRight: "10px"}}>
                         <BellFilled style={{fontSize: "20px"}}/>
                     </Button>
-                    <span style={{color: "#ffffff", fontSize: "16px", marginRight: "10px", marginTop: "-5px"}}>
-                      {user.name}
-                      <span style={{display: "block", fontSize: "12px", color: "#aaaaaa", marginTop: "-45px"}}>
+                    <span style={{display: "block", fontSize: "14px", color: "#aaaaaa"}}>
                         {user.email}
-                      </span>
                     </span>
 
 
@@ -111,7 +108,7 @@ const Navbar = ({signOut}) => {
                             type="text"
                             className="avatar-btn"
                             onClick={(e) => e.preventDefault()}>
-                            <Avatar size={55} src={user.picture}/>
+                            <Avatar size={40} style={{marginTop: "10px", marginLeft: "10px"}} src={user.picture}/>
                         </button>
                     </Dropdown>
                 </div>
