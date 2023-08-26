@@ -59,7 +59,7 @@ const ResourcesContainer = ({ reload }) => {
       >
         {/* Conditionally render loading spinner or content */}
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '25%' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '4rem' }}>
             <LoadingOutlined style={{fontSize: 40}} spin/>
           </div>
         ) : (

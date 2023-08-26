@@ -1,46 +1,31 @@
 import React, {useEffect, useState} from 'react';
-import {Avatar, Badge, Col, Divider, List, Row, Skeleton, Typography} from "antd";
-import {CodeSandboxSquareFilled} from "@ant-design/icons";
-import InfiniteScroll from 'react-infinite-scroll-component';
+import {Badge, Col, ConfigProvider, List, Row, Typography} from "antd";
+import {CodeSandboxSquareFilled, LoadingOutlined} from "@ant-design/icons";
+import axios from "axios";
 
 const {Title} = Typography;
 
-const PodsContainer = () => {
-    const data = [
-        {
-            title: 'Ant Design Title 1',
-        },
-        {
-            title: 'Ant Design Title 2',
-        },
-        {
-            title: 'Ant Design Title 3',
-        },
-        {
-            title: 'Ant Design Title 4',
-        },
-        {
-            title: 'Ant Design Title 5',
-        },
-        {
-            title: 'Ant Design Title 6',
-        },
-        {
-            title: 'Ant Design Title 7',
-        },
-        {
-            title: 'Ant Design Title 8',
-        },
-        {
-            title: 'Ant Design Title 9',
-        },
-        {
-            title: 'Ant Design Title 10',
-        },
-        {
-            title: 'Ant Design Title 11',
-        },
-    ];
+const PodsContainer = ({reload}) => {
+    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState([]);
+
+    const fetchData = () => {
+        setLoading(true);
+        axios
+            .get('http://localhost:8000/get_apps')
+            .then(response => {
+                setData(response.data)
+                setLoading(false);
+            })
+            .catch(error => {
+                console.log('Error:', error);
+                setLoading(false);
+            });
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [reload]);
 
     return (
         <Col>
@@ -52,28 +37,43 @@ const PodsContainer = () => {
                     </Title>
                 </span>
             </Row>
-            <Row>
-                <div style={{
-                    maxHeight: "65px",
-                    width: "100%",
-                    overflowY: "auto",
-                    border: '1px solid rgba(140, 140, 140, 0.35)'
-                }}>
-                    <List
-                        itemLayout="horizontal"
-                        dataSource={data}
-                        renderItem={(item, index) => (
-                            <List.Item style={{padding: 0, marginLeft: "5px"}}>
-                                <List.Item.Meta
-                                    avatar={<Badge color="green" size="default"/>}
-                                    description={<a href="https://ant.design">{item.title}</a>}
-                                />
-                            </List.Item>
-                        )}
-                    />
-                </div>
-            </Row>
-
+            <ConfigProvider
+                theme={{
+                    components: {
+                        List: {
+                            colorTextDescription: 'rgba(255,255,255,0.9)'
+                        },
+                    },
+                }}
+            >
+                {loading ? (
+                    <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '4rem'}}>
+                        <LoadingOutlined style={{fontSize: 40}} spin/>
+                    </div>
+                ) : (
+                    <Row>
+                        <div style={{
+                            height: '4rem',
+                            width: "100%",
+                            overflowY: "auto",
+                        }}>
+                            <List
+                                itemLayout="horizontal"
+                                dataSource={data}
+                                renderItem={(item, index) => (
+                                    <List.Item style={{padding: 0, marginLeft: "5px"}}
+                                               actions={[<a key="list-details-see">Details</a>]}>
+                                        <List.Item.Meta
+                                            avatar={<Badge color="green" size="default"/>}
+                                            description={item.spec.selector.matchLabels.app}
+                                        />
+                                    </List.Item>
+                                )}
+                            />
+                        </div>
+                    </Row>
+                )}
+            </ConfigProvider>
         </Col>
     );
 }

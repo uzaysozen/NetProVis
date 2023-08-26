@@ -59,7 +59,7 @@ def login():
 
 @app.post("/logout")
 def logout():
-    global access_token
+    global access_token, cluster, project
 
     # Execute the gcloud command to revoke all credentials
     gcloud_command = ["gcloud", "auth", "revoke", "--all"]
@@ -69,7 +69,7 @@ def logout():
         stdout, stderr = process.communicate()
 
         if process.returncode == 0:  # If the command executed successfully
-            access_token = None
+            access_token, cluster, project = None, None, None
             return {"message": "Logged out successfully"}
         else:
             error_msg = f"Error executing gcloud command: {stderr.strip()}"
@@ -101,7 +101,8 @@ def user_info():
 
 @app.post("/set_project")
 def set_project(p: Project):
-    global project
+    global project, cluster
+    cluster = None
     project = json.loads(p.selected_project)
     return project
 
@@ -110,7 +111,19 @@ def set_project(p: Project):
 def set_cluster(c: GKECluster):
     global cluster
     cluster = json.loads(c.selected_cluster)
-    return cluster
+    gcloud_command = ['gcloud', 'container', 'clusters', 'get-credentials', cluster['name'], '--zone', cluster['zone']]
+
+    try:
+        # Run the gcloud command and capture the output
+        result = subprocess.run(gcloud_command, capture_output=True, text=True, check=True, shell=True)
+
+        # Check if the command executed successfully
+        if result.returncode == 0:
+            return cluster
+        else:
+            raise HTTPException(status_code=500, detail="Failed to set cluster")
+    except subprocess.CalledProcessError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/projects")
@@ -151,34 +164,41 @@ def get_clusters():
 
 @app.get("/get_cluster_cpu")
 def get_cluster_cpu():
-    global project, access_token
+    global project, access_token, cluster
     project_id = project['projectId']
-    if project_id:
-        query = "fetch kubernetes.io/node/cpu/allocatable_utilization  | within (5m)"
+    cluster_name = cluster['name']
+    if project_id and cluster_name:
+        query = "fetch k8s_node" +\
+            "| metric 'kubernetes.io/node/cpu/allocatable_utilization'" +\
+            f"| filter (resource.cluster_name == '{cluster_name}')" +\
+            "| within(5m) "
+
         average_cpu_usage = get_cluster_resource_usage(access_token, project['projectId'], query)
         return average_cpu_usage
     else:
-        raise HTTPException(status_code=500, detail="Could not find project id")
+        raise HTTPException(status_code=500, detail="Could not find project id or cluster name")
 
 
 @app.get("/get_cluster_memory")
 def get_cluster_memory():
-    global project, access_token
+    global project, access_token, cluster
     project_id = project['projectId']
-    if project_id:
-        query = "fetch kubernetes.io/node/memory/allocatable_utilization  | within (5m)"
-        average_cpu_usage = get_cluster_resource_usage(access_token, project['projectId'], query)
-        return average_cpu_usage
+    cluster_name = cluster['name']
+    if project_id and cluster_name:
+        query = "fetch k8s_node" + \
+                "| metric 'kubernetes.io/node/memory/allocatable_utilization'" + \
+                f"| filter (resource.cluster_name == '{cluster_name}')" + \
+                "| within(5m) "
+        average_memory_usage = get_cluster_resource_usage(access_token, project['projectId'], query)
+        return average_memory_usage
     else:
-        raise HTTPException(status_code=500, detail="Could not find project id")
+        raise HTTPException(status_code=500, detail="Could not find project id or cluster name")
 
 
-@app.get("/get_services")
-def get_services():
-    services_list = []
-
+@app.get("/get_apps")
+def get_apps():
     # Execute the kubectl command to get the services
-    kubectl_command = ["kubectl", "get", "services", "--output=json"]
+    kubectl_command = ["kubectl", "get", "deployments", "--output=json"]
     try:
         # Run the kubectl command and capture the output
         process = subprocess.Popen(kubectl_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)

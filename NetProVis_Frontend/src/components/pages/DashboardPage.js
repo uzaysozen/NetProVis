@@ -20,7 +20,6 @@ const DashboardPage = () => {
     };
 
     const storedProject = JSON.parse(localStorage.getItem('selectedProject'));
-    console.log(storedProject)
     let storedProjectID;
     let storedProjectState;
     let storedProjectName;
@@ -80,7 +79,7 @@ const DashboardPage = () => {
                     </Col>
                     <Col className="gutter-row" span={6}>
                         <Row className="dashboard-container">
-                            <PodsContainer/>
+                            <PodsContainer reload={reload}/>
                         </Row>
                     </Col>
                     <Col className="gutter-row" span={6}>
