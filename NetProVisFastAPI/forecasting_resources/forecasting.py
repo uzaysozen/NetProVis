@@ -1,7 +1,5 @@
 import pandas as pd
 import numpy as np
-import tensorflow as tf
-import os
 import matplotlib.pyplot as plt
 from keras.models import Sequential, load_model
 from keras.layers import *
