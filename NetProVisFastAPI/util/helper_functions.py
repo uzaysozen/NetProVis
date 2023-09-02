@@ -13,7 +13,7 @@ def get_date_range(min_diff, given_date):
     return formatted_earlier_datetime, formatted_datetime
 
 
-def get_cluster_resource_usage(access_token, project_id, query):
+def make_request_for_time_series(access_token, project_id, query):
     endpoint = f"https://monitoring.googleapis.com/v3/projects/{project_id}/timeSeries:query"
     headers = {"Authorization": f"Bearer {access_token}"}
     payload = {"query": query}
@@ -24,7 +24,11 @@ def get_cluster_resource_usage(access_token, project_id, query):
 
     # Get the list of clusters from the response
     data = response.json()
+    return data
 
+
+def get_cluster_resource_usage(access_token, project_id, query):
+    data = make_request_for_time_series(access_token, project_id, query)
     # Extract the 'doubleValue' values from the 'timeSeriesData' for each label value
     res_usage_values = []
     for time_series in data.get("timeSeriesData", []):
@@ -40,3 +44,19 @@ def get_cluster_resource_usage(access_token, project_id, query):
     print("{}: {:.2%}".format(query.split(' ')[1], average_res_usage))
 
     return average_res_usage * 100
+
+
+def get_resource_time_series_data(access_token, project_id, query):
+    # Get the list of clusters from the response
+    data = data = make_request_for_time_series(access_token, project_id, query)
+    result = []
+    for series in data["timeSeriesData"]:
+        for point in series["pointData"]:
+            timestamp = point["timeInterval"]["endTime"]
+            cpu_usage = point["values"][0]["doubleValue"] * 100  # Convert to percentage
+            result.append({
+                "timestamp": timestamp,
+                "cpu_usage": cpu_usage
+            })
+
+    return result

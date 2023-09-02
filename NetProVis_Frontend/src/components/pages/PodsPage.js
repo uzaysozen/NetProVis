@@ -4,7 +4,7 @@ import {Content} from "antd/es/layout/layout";
 import {PlusOutlined} from '@ant-design/icons';
 import axios from 'axios';
 
-const {Title, Text} = Typography;
+const {Title} = Typography;
 
 const PodsPage = () => {
     const [data, setData] = useState([]);
@@ -20,6 +20,17 @@ const PodsPage = () => {
             });
     };
 
+    const activateHPA = (pod) => {
+        axios.post('http://localhost:8000/activate_hpa', {selected_pod: JSON.stringify(pod)})
+            .then(response => {
+                console.log('HPA Activated:', response.data);
+            })
+            .catch(error => {
+                console.log('Error activating HPA:', error);
+            });
+    };
+
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -34,17 +45,9 @@ const PodsPage = () => {
         <Content className={'dashboard-content'}>
             <Row gutter={24} style={{justifyContent: 'flex-end', marginBottom: '20px'}}>
                 <Col>
-                    <Button style={{backgroundColor: '#2196f3', height: '3rem'}}>
-                        <span>
-                            <Text style={{color: 'white'}} strong>
-                                Add CNF
-                            </Text>
-                            <Text style={{marginLeft: '5px', fontSize: '20px', color: 'white'}}>
-                                <PlusOutlined/>
-                            </Text>
-                        </span>
+                    <Button type="primary" shape="round" icon={<PlusOutlined />} size="large">
+                        Add CNF
                     </Button>
-
                 </Col>
             </Row>
             {chunkedData.map((rowItems, rowIndex) => (
@@ -55,7 +58,7 @@ const PodsPage = () => {
                                 <Title style={{color: 'white', margin: '0'}} level={3}>
                                     {item.spec.selector.matchLabels.app}
                                 </Title>
-                                {/* Add content for this column */}
+                                <Button type="primary" style={{marginTop: "15px"}} size="medium" onClick={() => activateHPA(item)}>Activate HPA</Button>
                             </Row>
                         </Col>
                     ))}

@@ -11,3 +11,7 @@ class Project(BaseModel):
 
 class GKECluster(BaseModel):
     selected_cluster: str
+
+
+class Pod(BaseModel):
+    selected_pod: str

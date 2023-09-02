@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Col, ConfigProvider, Row, Spin, Statistic, Typography } from "antd";
-import {LoadingOutlined, PercentageOutlined, PieChartFilled, ReloadOutlined} from "@ant-design/icons";
+import { Col, ConfigProvider, Row, Statistic, Typography } from "antd";
+import {LoadingOutlined, PercentageOutlined, PieChartFilled} from "@ant-design/icons";
 import axios from "axios";
 
 const { Title } = Typography;

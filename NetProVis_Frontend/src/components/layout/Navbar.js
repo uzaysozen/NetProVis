@@ -68,6 +68,9 @@ const Navbar = ({signOut}) => {
     };
     const clusterMenu = (
         <Menu>
+            <Menu.Item key={0}>
+                    Choose Cluster
+            </Menu.Item>
             {clusters.map((cluster, index) => (
                 <Menu.Item key={index + 1} onClick={() => handleClusterMenuClick(cluster)}>
                     {cluster.name}

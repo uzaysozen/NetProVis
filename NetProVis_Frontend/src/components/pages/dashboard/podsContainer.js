@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {Badge, Col, ConfigProvider, List, Row, Typography} from "antd";
 import {CodeSandboxSquareFilled, LoadingOutlined} from "@ant-design/icons";
 import axios from "axios";
+import {Link} from "react-router-dom";
 
 const {Title} = Typography;
 
@@ -62,7 +63,7 @@ const PodsContainer = ({reload}) => {
                                 dataSource={data}
                                 renderItem={(item, index) => (
                                     <List.Item style={{padding: 0, marginLeft: "5px"}}
-                                               actions={[<a key="list-details-see">Details</a>]}>
+                                               actions={[<Link to="/pods">Details</Link>]}>
                                         <List.Item.Meta
                                             avatar={<Badge color="green" size="default"/>}
                                             description={item.spec.selector.matchLabels.app}

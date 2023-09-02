@@ -4,11 +4,17 @@ from NetProVisFastAPI.models.api_models import *
 from NetProVisFastAPI.util.helper_functions import *
 import json
 import subprocess
+import httpx
+from asyncio import get_event_loop, new_event_loop, set_event_loop
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app = FastAPI()
 access_token = None
+identity_token = None
 project = {}
 cluster = {}
+scheduler = BackgroundScheduler()
+scheduler.start()
 
 # Configure CORS
 origins = [
@@ -25,36 +31,48 @@ app.add_middleware(
 )
 
 
+@app.on_event("shutdown")
+def shutdown_event():
+    scheduler.shutdown()
+
+
 @app.post("/login")
 def login():
-    global access_token
-    access_token = None
-
-    # Execute the gcloud command to log in and get the access token
+    global access_token, identity_token
+    # Execute the gcloud command to log in and get the tokens
     login_command = ["gcloud", "auth", "login"]
-    gcloud_command = ["gcloud", "auth", "print-access-token"]
+    token_commands = {
+        "access_token": ["gcloud", "auth", "print-access-token"],
+        "identity_token": ["gcloud", "auth", "print-identity-token"]
+    }
+
+    tokens = {}
 
     try:
         # Run the gcloud auth login command to initiate the login process
         subprocess.run(login_command, check=True, shell=True)
 
-        # After successful login, get the access token
-        process = subprocess.Popen(gcloud_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True)
-        stdout, stderr = process.communicate()
+        for token_name, command in token_commands.items():
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True)
+            stdout, stderr = process.communicate()
 
-        if process.returncode == 0:  # If the command executed successfully
-            # The access token is present in the stdout
-            access_token = stdout.strip()
-        else:
-            error_msg = f"Error executing gcloud command: {stderr.strip()}"
-            raise HTTPException(status_code=500, detail=error_msg)
-    except subprocess.CalledProcessError as e:
+            if process.returncode == 0:
+                tokens[token_name] = stdout.strip()
+            else:
+                raise HTTPException(status_code=500, detail=f"Error executing {command}: {stderr.strip()}")
+
+    except subprocess.CalledProcessError:
         raise HTTPException(status_code=500, detail="Failed to log in with gcloud")
 
-    if not access_token:
-        raise HTTPException(status_code=500, detail="Failed to retrieve access token")
+    if "access_token" in tokens:
+        access_token = tokens["access_token"]
+    if "identity_token" in tokens:
+        identity_token = tokens["identity_token"]
 
-    return {"access_token": access_token}
+    if not access_token or not identity_token:
+        raise HTTPException(status_code=500, detail="Failed to retrieve tokens")
+
+    return tokens
 
 
 @app.post("/logout")
@@ -65,7 +83,8 @@ def logout():
     gcloud_command = ["gcloud", "auth", "revoke", "--all"]
     try:
         # Run the gcloud command and capture the output
-        process = subprocess.Popen(gcloud_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True)
+        process = subprocess.Popen(gcloud_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                                   shell=True)
         stdout, stderr = process.communicate()
 
         if process.returncode == 0:  # If the command executed successfully
@@ -109,9 +128,11 @@ def set_project(p: Project):
 
 @app.post("/set_cluster")
 def set_cluster(c: GKECluster):
-    global cluster
+    global cluster, project
     cluster = json.loads(c.selected_cluster)
-    gcloud_command = ['gcloud', 'container', 'clusters', 'get-credentials', cluster['name'], '--zone', cluster['zone']]
+    gcloud_command = ['gcloud', 'container', 'clusters', 'get-credentials', cluster['name'],
+                      '--zone', cluster['zone'],
+                      '--project', project['projectId']]
 
     try:
         # Run the gcloud command and capture the output
@@ -168,10 +189,10 @@ def get_cluster_cpu():
     project_id = project['projectId']
     cluster_name = cluster['name']
     if project_id and cluster_name:
-        query = "fetch k8s_node" +\
-            "| metric 'kubernetes.io/node/cpu/allocatable_utilization'" +\
-            f"| filter (resource.cluster_name == '{cluster_name}')" +\
-            "| within(5m) "
+        query = "fetch k8s_node" + \
+                "| metric 'kubernetes.io/node/cpu/allocatable_utilization'" + \
+                f"| filter (resource.cluster_name == '{cluster_name}')" + \
+                "| within(5m) "
 
         average_cpu_usage = get_cluster_resource_usage(access_token, project['projectId'], query)
         return average_cpu_usage
@@ -215,3 +236,84 @@ def get_apps():
         raise HTTPException(status_code=500, detail=e)
 
     return services_list
+
+
+@app.post("/activate_hpa")
+def activate_hpa(p: Pod):
+    pod = json.loads(p.selected_pod)
+    # Create a unique job ID based on the pod's name
+    job_id = f"adaptive_hpa_job_for_{pod['metadata']['name']}"
+
+    # Check if job already exists to avoid adding multiple jobs
+    if not scheduler.get_job(job_id):
+        scheduler.add_job(run_adaptive_hpa_sync, 'interval', minutes=1, args=[pod], id=job_id)
+        return {"status": f"Scheduler activated for pod {pod['metadata']['name']}"}
+    else:
+        return {"status": f"Scheduler already running for pod {pod['metadata']['name']}"}
+
+
+@app.post("/stop_hpa")
+def stop_hpa(p: Pod):
+    pod = json.loads(p.selected_pod)
+    # Create a unique job ID based on the pod's name
+    job_id = f"adaptive_hpa_job_for_{pod['metadata']['name']}"
+
+    if scheduler.get_job(job_id):
+        scheduler.remove_job(job_id)
+        return {"status": f"Job for pod {pod['metadata']['name']} stopped"}
+    else:
+        return {"status": f"Job for pod {pod['metadata']['name']} not found"}
+
+
+def run_adaptive_hpa_sync(pod):
+    loop = new_event_loop()
+    set_event_loop(loop)
+    loop.run_until_complete(adaptive_hpa(pod))
+    loop.close()
+
+
+async def adaptive_hpa(pod):
+    global project, access_token, cluster, identity_token
+
+    project_id, cluster_name, pod_type, pod_name, cluster_zone = (
+        project['projectId'],
+        cluster['name'],
+        pod['kind'],
+        pod['metadata']['name'],
+        cluster['zone']
+    )
+
+    if project_id and cluster_name:
+        query = (f"fetch k8s_container | metric 'kubernetes.io/container/cpu/limit_utilization' | filter "
+                 f"resource.project_id == '{project_id}' && "
+                 f"(metadata.system_labels.top_level_controller_name == '{pod_name}' && "
+                 f"metadata.system_labels.top_level_controller_type == '{pod_type}') && "
+                 f"(resource.cluster_name == '{cluster_name}' && resource.location == '{cluster_zone}' && "
+                 f"resource.namespace_name == 'default') | group_by 1m, [value_limit_utilization_mean: mean("
+                 f"value.limit_utilization)] | every 5m | group_by [resource.pod_name], "
+                 f"[value_limit_utilization_mean_percentile: percentile(value_limit_utilization_mean, 50)] | within(10h)")
+
+        resource_limit_utilization = get_resource_time_series_data(access_token, project['projectId'], query)
+
+        endpoint = "https://europe-west3-netprovis-397212.cloudfunctions.net/forecast-resources"
+        headers = {
+            "Authorization": f"Bearer {identity_token}",
+            "Content-Type": "application/json"
+        }
+        payload = json.dumps(resource_limit_utilization)
+
+        # Make the HTTP POST request
+        try:
+            # Use httpx for async request
+            async with httpx.AsyncClient() as client:
+                response = await client.post(endpoint, data=payload, headers=headers, timeout=310)
+            response.raise_for_status()  # Check if the request was successful
+        except httpx.HTTPError as err:  # Notice the change here from requests to httpx
+            error_msg = f"Error when calling the forecast-resources endpoint: {err}"
+            print(error_msg)
+            raise HTTPException(status_code=500, detail=error_msg) from err
+
+        print(response.json())
+        return response.json()  # Return the JSON response
+    else:
+        raise HTTPException(status_code=500, detail="Could not find project id or cluster name")
