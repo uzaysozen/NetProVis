@@ -1,3 +1,5 @@
+import os
+from NetProVisFastAPI.templates.k8s_templates import HPA_TEMPLATE
 from fastapi import FastAPI, HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from NetProVisFastAPI.models.api_models import *
@@ -5,7 +7,7 @@ from NetProVisFastAPI.util.helper_functions import *
 import json
 import subprocess
 import httpx
-from asyncio import get_event_loop, new_event_loop, set_event_loop
+from asyncio import new_event_loop, set_event_loop
 from apscheduler.schedulers.background import BackgroundScheduler
 
 app = FastAPI()
@@ -50,10 +52,10 @@ def login():
 
     try:
         # Run the gcloud auth login command to initiate the login process
-        subprocess.run(login_command, check=True, shell=True)
+        subprocess.run(login_command, check=True)
 
         for token_name, command in token_commands.items():
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True)
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             stdout, stderr = process.communicate()
 
             if process.returncode == 0:
@@ -83,8 +85,7 @@ def logout():
     gcloud_command = ["gcloud", "auth", "revoke", "--all"]
     try:
         # Run the gcloud command and capture the output
-        process = subprocess.Popen(gcloud_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-                                   shell=True)
+        process = subprocess.Popen(gcloud_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         stdout, stderr = process.communicate()
 
         if process.returncode == 0:  # If the command executed successfully
@@ -130,13 +131,14 @@ def set_project(p: Project):
 def set_cluster(c: GKECluster):
     global cluster, project
     cluster = json.loads(c.selected_cluster)
+    print(cluster)
     gcloud_command = ['gcloud', 'container', 'clusters', 'get-credentials', cluster['name'],
                       '--zone', cluster['zone'],
                       '--project', project['projectId']]
 
     try:
         # Run the gcloud command and capture the output
-        result = subprocess.run(gcloud_command, capture_output=True, text=True, check=True, shell=True)
+        result = subprocess.run(gcloud_command, capture_output=True, text=True, check=True)
 
         # Check if the command executed successfully
         if result.returncode == 0:
@@ -275,12 +277,13 @@ def run_adaptive_hpa_sync(pod):
 async def adaptive_hpa(pod):
     global project, access_token, cluster, identity_token
 
-    project_id, cluster_name, pod_type, pod_name, cluster_zone = (
+    project_id, cluster_name, pod_type, pod_name, cluster_zone, cluster_endpoint = (
         project['projectId'],
         cluster['name'],
         pod['kind'],
         pod['metadata']['name'],
-        cluster['zone']
+        cluster['zone'],
+        cluster['privateClusterConfig']['publicEndpoint']
     )
 
     if project_id and cluster_name:
@@ -290,11 +293,11 @@ async def adaptive_hpa(pod):
                  f"metadata.system_labels.top_level_controller_type == '{pod_type}') && "
                  f"(resource.cluster_name == '{cluster_name}' && resource.location == '{cluster_zone}' && "
                  f"resource.namespace_name == 'default') | group_by 1m, [value_limit_utilization_mean: mean("
-                 f"value.limit_utilization)] | every 5m | group_by [resource.pod_name], "
-                 f"[value_limit_utilization_mean_percentile: percentile(value_limit_utilization_mean, 50)] | within(10h)")
+                 f"value.limit_utilization)] | every 1m | group_by [metadata.system_labels.top_level_controller_name], "
+                 f"[value_limit_utilization_mean_percentile: percentile(value_limit_utilization_mean, 50)] | within(2h)")
 
         resource_limit_utilization = get_resource_time_series_data(access_token, project['projectId'], query)
-
+        print(resource_limit_utilization)
         endpoint = "https://europe-west3-netprovis-397212.cloudfunctions.net/forecast-resources"
         headers = {
             "Authorization": f"Bearer {identity_token}",
@@ -312,8 +315,45 @@ async def adaptive_hpa(pod):
             error_msg = f"Error when calling the forecast-resources endpoint: {err}"
             print(error_msg)
             raise HTTPException(status_code=500, detail=error_msg) from err
-
-        print(response.json())
-        return response.json()  # Return the JSON response
+        threshold_value = response.json().get('threshold')
+        print(threshold_value)
+        res = create_hpa(cluster_endpoint, "default", pod_name, pod_type, threshold_value)
+        print("Finished setting HPA threshold! Success!")
+        return res
     else:
         raise HTTPException(status_code=500, detail="Could not find project id or cluster name")
+
+
+def create_hpa(cluster_endpoint, namespace, pod_name, pod_type, threshold_value):
+    global access_token
+
+    endpoint = f"https://{cluster_endpoint}/apis/autoscaling/v2/namespaces/{namespace}/horizontalpodautoscalers"
+    hpa_endpoint = f"{endpoint}/adaptive-hpa-for-{pod_name}"  # Specific endpoint for the HPA
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+    payload = dict(HPA_TEMPLATE)  # Create a shallow copy
+    payload['metadata']['name'] = f"adaptive-hpa-for-{pod_name}"
+    payload['spec']['scaleTargetRef'].update({
+        'kind': pod_type,
+        'name': pod_name
+    })
+    metric = payload['spec']['metrics'][0]['resource']
+    metric['name'] = "cpu"
+    metric['target']['averageUtilization'] = int(threshold_value)  # Ensure it's an integer
+
+    response = requests.post(endpoint, headers=headers, json=payload, verify=False)
+
+    if response.status_code == 409:  # Conflict error, HPA already exists
+        # Updating the existing HPA using a PUT request
+        response = requests.put(hpa_endpoint, headers=headers, json=payload, verify=False)
+
+    response.raise_for_status()  # Raise an exception for other unsuccessful requests
+
+    return response.json()
+
+
+
+
