@@ -1,13 +1,13 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from keras.models import Sequential, load_model
+from keras.models import Sequential, load_model, Model
 from keras.layers import *
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.losses import MeanSquaredError
-from keras.metrics import RootMeanSquaredError
+from keras.metrics import MeanAbsoluteError, RootMeanSquaredError
 from keras.optimizers import Adam
 from keras.backend import clear_session
 from keras import backend
@@ -30,7 +30,7 @@ get_custom_objects().update({'swish': swish})
 # 1. Preparing data
 def prepare_data(file_name, date_col_name, target_col_name):
     df = pd.read_csv(file_name)
-    df = df[-(MIN_WINDOW + N_FORECAST):-N_FORECAST]
+    df = df[-120:]
 
     # Set timestamp as index
     df.index = pd.to_datetime(df[date_col_name])
@@ -64,17 +64,14 @@ def generate_input_output_sequences(target_col):
     return X_train, Y_train, X_val, Y_val
 
 
-# 4. Train the model
 def train_model(model_path, x_train, y_train, val_data):
     # building model
     model = Sequential()
-    # model.add(GRU(units=64, return_sequences=True, input_shape=(N_LOOKBACK, 1)))
-    # model.add(GRU(units=32))
-    # model.add(Dense(N_FORECAST))
     model.add(InputLayer((N_LOOKBACK, 1)))
-    model.add(LSTM(200, return_sequences=True))
-    model.add(LSTM(150, activation='relu'))
-    model.add(Dense(N_FORECAST, activation='swish'))
+    model.add(LSTM(200, activation='relu'))
+    # model.add(LSTM(200, return_sequences=True))
+    # model.add(LSTM(150, activation='relu'))
+    model.add(Dense(N_FORECAST, activation='relu'))
     # configure callback functions
     cp = ModelCheckpoint(model_path, save_best_only=True)
     es = EarlyStopping(monitor='val_root_mean_squared_error', mode='min', patience=5)
@@ -104,7 +101,6 @@ def organize_and_get_results(df, target_forecast, date_col_name, target_col_name
     df_past.rename(columns={'index': date_col_name, target_col_name: 'Actual'}, inplace=True)
     df_past[date_col_name] = pd.to_datetime(df_past[date_col_name])
     df_past['Forecast'] = np.nan
-    df_past['Forecast'].iloc[-1] = df_past['Actual'].iloc[-1]
 
     df_future = pd.DataFrame(columns=[date_col_name, 'Actual', 'Forecast'])
     df_future[date_col_name] = pd.date_range(start=df_past[date_col_name].iloc[-1] + pd.Timedelta(minutes=5),
@@ -142,7 +138,7 @@ if __name__ == "__main__":
     # CPU Forecasting
     clear_session()
     file_path = r"C:\Users\uzays\OneDrive - University of Greenwich\COURSES\1b-Summer Term (COMP-1252-MSc " \
-                r"Project)\datasets\scripts\test\vm_752502434_.csv"
+                r"Project)\datasets\scripts\test\convertcsv.csv"
     cpu_forecast_results, cpu_forecast_data_list = forecast(
         file_name=file_path,
         date_column_name='timestamp',
@@ -152,20 +148,20 @@ if __name__ == "__main__":
     # plot the results
     cpu_forecast_results[-MIN_WINDOW:].plot(title='CPU Usage')
     plt.show()
-
-    # Memory Forecasting
-    clear_session()
-    memory_forecast_results, memory_forecast_data_list = forecast(
-        file_name=file_path,
-        date_column_name='timestamp',
-        target_column_name='memory_usage',
-        model_path='../model_memory/model_memory.h5'
-    )
-
-    print(memory_forecast_data_list)
-    # plot the results
-    memory_forecast_results[-MIN_WINDOW:].plot(title='Memory Usage')
-    plt.show()
+    #
+    # # Memory Forecasting
+    # clear_session()
+    # memory_forecast_results, memory_forecast_data_list = forecast(
+    #     file_name=file_path,
+    #     date_column_name='timestamp',
+    #     target_column_name='memory_usage',
+    #     model_path='../model_memory/model_memory.h5'
+    # )
+    #
+    # print(memory_forecast_data_list)
+    # # plot the results
+    # memory_forecast_results[-MIN_WINDOW:].plot(title='Memory Usage')
+    # plt.show()
 
     get_mape(file_path=file_path, forecast=cpu_forecast_data_list, target_column='cpu_usage')
-    get_mape(file_path=file_path, forecast=memory_forecast_data_list, target_column='memory_usage')
+    # get_mape(file_path=file_path, forecast=memory_forecast_data_list, target_column='memory_usage')
