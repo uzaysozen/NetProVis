@@ -57,7 +57,7 @@ function App() {
       .then(response => {
         checkLoginStatus()
         setIsLoading(false);
-        localStorage.removeItem('selectedProject')
+        localStorage.removeItem("selectedProject");
       })
       .catch(error => {
         console.log('Error:', error);

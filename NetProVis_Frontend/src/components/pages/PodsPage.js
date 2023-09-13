@@ -1,71 +1,160 @@
 import React, {useEffect, useState} from 'react';
 import {Button, Col, Row, Typography} from 'antd';
 import {Content} from "antd/es/layout/layout";
-import {PlusOutlined} from '@ant-design/icons';
-import axios from 'axios';
+import {LoadingOutlined, PlusOutlined} from '@ant-design/icons';
+import {getPods, activateHPA, stopHPA} from '../../util/api';
+import '../../styles/PodsPage.css';
+import CNFModal from "../modals/CNFModal";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCloudUploadAlt } from '@fortawesome/free-solid-svg-icons';
 
 const {Title} = Typography;
 
+function capitalizeFirstLetter(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+const HPAButton = ({resource, actionType, pod, loadingState, onClickAction, disabled}) => {
+    const loadingKey = `${pod.metadata.name}_${resource}`;
+    const buttonTextMap = {
+        activate: `Activate HPA for ${resource !== 'cpu' ? capitalizeFirstLetter(resource) : resource.toString().toUpperCase()}`,
+        stop: `Stop HPA for ${resource !== 'cpu' ? capitalizeFirstLetter(resource) : resource.toString().toUpperCase()}`
+    };
+
+    return (
+        <Button
+            shape="round"
+            type="primary"
+            danger={actionType === 'stop'}
+            size="medium"
+            disabled={disabled}
+            style={{marginTop: "15px", marginLeft: resource !== 'cpu' ? "15px" : "0"}}
+            onClick={() => onClickAction(pod, resource)}
+            loading={loadingState[loadingKey]}
+        >
+            {buttonTextMap[actionType]}
+        </Button>
+    );
+};
+
+
+const PodItem = ({item, activatedResource, loading, handleActivate, handleStop}) => (
+    <Col md={12} className="gutter-row">
+        <Row className="dashboard-container">
+            <Title style={{color: 'white', margin: '0'}} level={3}>{item.metadata.name}</Title>
+            {['cpu', 'memory', 'all'].map(resource => (
+                activatedResource === resource ?
+                    <HPAButton key={resource} resource={resource} disabled={false} actionType="stop" pod={item}
+                               loadingState={loading}
+                               onClickAction={handleStop}/>
+                    :
+                    <HPAButton key={resource} resource={resource}
+                               disabled={resource !== 'all' && activatedResource === 'all'}
+                               actionType="activate"
+                               pod={item}
+                               loadingState={loading} onClickAction={handleActivate}/>
+            ))}
+        </Row>
+    </Col>
+);
+
 const PodsPage = () => {
     const [data, setData] = useState([]);
-    const fetchData = () => {
-        axios
-            .get('http://localhost:8000/get_apps')
+    const [loading, setLoading] = useState({});
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [loadingData, setLoadingData] = useState(true); // set to true initially to indicate loading
+    const initialActivatedState = localStorage.getItem('activatedState');
+    const [activated, setActivated] = useState(initialActivatedState ?
+        JSON.parse(initialActivatedState) : {});
+
+    const handleActivate = async (pod, resource) => {
+        const loadingKey = `${pod.metadata.name}_${resource}`;
+        setLoading(prev => ({...prev, [loadingKey]: true}));
+        try {
+            const response = await activateHPA(pod, resource);
+            console.log('HPA Activated:', response.data);
+            setActivated(prev => ({...prev, [pod.metadata.name]: resource}));
+        } catch (error) {
+            console.log('Error activating HPA:', error);
+        }
+        setLoading(prev => ({...prev, [loadingKey]: false}));
+    };
+
+    const handleStop = async (pod, resource) => {
+        const loadingKey = `${pod.metadata.name}_${resource}`;
+        setLoading(prev => ({...prev, [loadingKey]: true}));
+        try {
+            const response = await stopHPA(pod, resource);
+            console.log('HPA Stopped:', response.data);
+            setActivated(prev => ({...prev, [pod.metadata.name]: ''}));
+        } catch (error) {
+            console.log('Error stopping HPA:', error);
+        }
+        setLoading(prev => ({...prev, [loadingKey]: false}));
+    };
+
+    useEffect(() => {
+        setLoadingData(true);
+        getPods()
             .then(response => {
-                console.log(response.data);
                 setData(response.data);
+                setLoadingData(false);
             })
             .catch(error => {
                 console.log('Error:', error);
+                setLoadingData(true);
             });
-    };
 
-    const activateHPA = (pod) => {
-        axios.post('http://localhost:8000/activate_hpa', {selected_pod: JSON.stringify(pod)})
-            .then(response => {
-                console.log('HPA Activated:', response.data);
-            })
-            .catch(error => {
-                console.log('Error activating HPA:', error);
-            });
-    };
-
-
-    useEffect(() => {
-        fetchData();
+        const storedState = localStorage.getItem('activatedState');
+        if (storedState) setActivated(JSON.parse(storedState));
     }, []);
 
-    // Split data into chunks of two items each
-    const chunkedData = [];
-    for (let i = 0; i < data.length; i += 2) {
-        chunkedData.push(data.slice(i, i + 2));
-    }
+    useEffect(() => {
+        localStorage.setItem('activatedState', JSON.stringify(activated));
+    }, [activated]);
 
     return (
-        <Content className={'dashboard-content'}>
-            <Row gutter={24} style={{justifyContent: 'flex-end', marginBottom: '20px'}}>
+        <Content className="dashboard-content">
+            <Row gutter={24} className="add-button-row">
                 <Col>
-                    <Button type="primary" shape="round" icon={<PlusOutlined />} size="large">
-                        Add CNF
+                    <Button
+                        type="primary"
+                        shape="round"
+                        icon={<FontAwesomeIcon icon={faCloudUploadAlt} />}
+                        size="large"
+                        onClick={() => setIsModalVisible(true)}
+                    >
+                        Deploy CNF
                     </Button>
                 </Col>
             </Row>
-            {chunkedData.map((rowItems, rowIndex) => (
-                <Row key={rowIndex} gutter={24} style={{display: 'flex', alignItems: 'flex-start'}}>
-                    {rowItems.map(item => (
-                        <Col key={item.metadata.name} className="gutter-row" span={12}>
-                            <Row className="dashboard-container">
-                                <Title style={{color: 'white', margin: '0'}} level={3}>
-                                    {item.spec.selector.matchLabels.app}
-                                </Title>
-                                <Button type="primary" style={{marginTop: "15px"}} size="medium" onClick={() => activateHPA(item)}>Activate HPA</Button>
-                            </Row>
-                        </Col>
+            <CNFModal isVisible={isModalVisible} onClose={() => setIsModalVisible(false)}/>
+
+            {loadingData &&
+            <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: "50vh"}}>
+                <LoadingOutlined style={{ fontSize: 80}} spin/>
+                <span style={{marginLeft: "20px", fontSize: "30px"}}>Loading pods...</span>
+            </div>}
+
+            {!loadingData && data.length === 0 && <div>No pod data available.</div>}
+
+            {!loadingData && data.length > 0 && (
+                <Row gutter={24} className="pod-row">
+                    {data.map((item, index) => (
+                        <PodItem
+                            key={index}
+                            item={item}
+                            activatedResource={activated[item.metadata.name] || ""}
+                            loading={loading}
+                            handleActivate={handleActivate}
+                            handleStop={handleStop}
+                        />
                     ))}
                 </Row>
-            ))}
+            )}
         </Content>
     );
+
 };
 
 export default PodsPage;

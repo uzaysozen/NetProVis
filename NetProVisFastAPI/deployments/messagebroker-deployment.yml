@@ -1,0 +1,18 @@
+# Message Broker (using RabbitMQ as an example)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messagebroker-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: messagebroker
+  template:
+    metadata:
+      labels:
+        app: messagebroker
+    spec:
+      containers:
+      - name: messagebroker
+        image: rabbitmq:latest

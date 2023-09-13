@@ -1,0 +1,18 @@
+# IDS (using Snort as an example)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ids-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ids
+  template:
+    metadata:
+      labels:
+        app: ids
+    spec:
+      containers:
+      - name: ids
+        image: snort:latest

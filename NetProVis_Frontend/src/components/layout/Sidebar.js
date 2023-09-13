@@ -41,7 +41,7 @@ const Sidebar = () => {
           <Link to="/dashboard">Dashboard</Link>
         </Menu.Item>
         <Menu.Item key="/pods" icon={<CodepenSquareFilled />}>
-          <Link to="/pods">CNF Pods</Link>
+          <Link to="/pods">Workloads</Link>
         </Menu.Item>
         <Menu.Item key="/tasks" icon={<BookFilled />}>
           <Link to="/tasks">Tasks</Link>

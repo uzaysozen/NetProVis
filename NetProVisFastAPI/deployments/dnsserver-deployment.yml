@@ -1,0 +1,18 @@
+# DNS Server (using BIND as an example)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dns-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dns
+  template:
+    metadata:
+      labels:
+        app: dns
+    spec:
+      containers:
+      - name: dns
+        image: bind:latest

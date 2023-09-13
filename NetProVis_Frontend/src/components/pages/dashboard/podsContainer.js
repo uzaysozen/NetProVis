@@ -13,7 +13,7 @@ const PodsContainer = ({reload}) => {
     const fetchData = () => {
         setLoading(true);
         axios
-            .get('http://localhost:8000/get_apps')
+            .get('http://localhost:8000/get_pods')
             .then(response => {
                 setData(response.data)
                 setLoading(false);
@@ -33,8 +33,8 @@ const PodsContainer = ({reload}) => {
             <Row>
                 <span>
                     <Title level={3} className="dashboard-title">
-                        Pods
-                        <CodeSandboxSquareFilled style={{marginLeft: "22vh", fontSize: "30px"}}/>
+                        Workloads
+                        <CodeSandboxSquareFilled style={{marginLeft: "15vh", fontSize: "30px"}}/>
                     </Title>
                 </span>
             </Row>
@@ -66,7 +66,7 @@ const PodsContainer = ({reload}) => {
                                                actions={[<Link to="/pods">Details</Link>]}>
                                         <List.Item.Meta
                                             avatar={<Badge color="green" size="default"/>}
-                                            description={item.spec.selector.matchLabels.app}
+                                            description={item.metadata.name}
                                         />
                                     </List.Item>
                                 )}

@@ -65,7 +65,7 @@ const ResourcesContainer = ({ reload }) => {
         ) : (
           <Row gutter={16}>
             <Col span={12}>
-              <Statistic style={{ marginLeft: "6vh" }} title="CPU" value={cpuUsage.toFixed(2)} suffix={<PercentageOutlined />} />
+              <Statistic style={{ marginLeft: "4vh" }} title="CPU" value={cpuUsage.toFixed(2)} suffix={<PercentageOutlined />} />
             </Col>
             <Col span={12}>
               <Statistic style={{ marginLeft: "2vh" }} title="RAM" value={memoryUsage.toFixed(2)} suffix={<PercentageOutlined />} />

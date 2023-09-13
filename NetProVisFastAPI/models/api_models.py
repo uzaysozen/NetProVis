@@ -15,3 +15,8 @@ class GKECluster(BaseModel):
 
 class Pod(BaseModel):
     selected_pod: str
+    resource_type: str
+
+
+class CNF(BaseModel):
+    cnf: str
