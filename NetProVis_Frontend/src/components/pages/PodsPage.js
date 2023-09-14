@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {Button, Col, Row, Typography} from 'antd';
 import {Content} from "antd/es/layout/layout";
-import {LoadingOutlined, PlusOutlined} from '@ant-design/icons';
+import {CodeSandboxSquareFilled, LoadingOutlined, PieChartFilled, PlusOutlined} from '@ant-design/icons';
 import {getPods, activateHPA, stopHPA} from '../../util/api';
 import '../../styles/PodsPage.css';
 import CNFModal from "../modals/CNFModal";
@@ -41,7 +41,16 @@ const HPAButton = ({resource, actionType, pod, loadingState, onClickAction, disa
 const PodItem = ({item, activatedResource, loading, handleActivate, handleStop}) => (
     <Col md={12} className="gutter-row">
         <Row className="dashboard-container">
-            <Title style={{color: 'white', margin: '0'}} level={3}>{item.metadata.name}</Title>
+            <Row align="middle" gutter={8}>
+                <Col style={{ marginRight: "10px", marginBottom: "15px" }}>
+                    <CodeSandboxSquareFilled style={{ fontSize: "30px", color: "#1890ff" }} />
+                </Col>
+                <Col>
+                    <Title level={3} className="dashboard-title">
+                        {item.metadata.name}
+                    </Title>
+                </Col>
+            </Row>
             {['cpu', 'memory', 'all'].map(resource => (
                 activatedResource === resource ?
                     <HPAButton key={resource} resource={resource} disabled={false} actionType="stop" pod={item}

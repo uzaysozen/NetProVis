@@ -20,3 +20,4 @@ class Pod(BaseModel):
 
 class CNF(BaseModel):
     cnf: str
+    params: str

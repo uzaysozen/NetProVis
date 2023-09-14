@@ -1,7 +1,5 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 import copy
-import os
-import re
 import httpx
 import json
 import pytz
@@ -17,6 +15,7 @@ shell = True
 project = {}
 cluster = {}
 pods = []
+tasks = []
 
 
 def get_date_range(min_diff, given_date):
@@ -178,6 +177,11 @@ async def delete_individual_hpa(hpa_endpoint, hpa_name, headers):
     delete_endpoint = f"{hpa_endpoint}/{hpa_name}"
     await make_request(delete_endpoint, method="delete", headers=headers)
 
+def get_current_date():
+    current_datetime = datetime.now()
+    formatted_datetime = current_datetime.strftime("%B %d, %Y, %I:%M:%S %p")
+    return formatted_datetime
+
 
 async def adaptive_hpa(pod, resource_type, pod_project, pod_cluster):
     project_id, cluster_name, cluster_zone = pod_project['projectId'], pod_cluster['name'], pod_cluster['zone']
@@ -194,6 +198,11 @@ async def adaptive_hpa(pod, resource_type, pod_project, pod_cluster):
     res = await create_hpa(cluster_endpoint,
                            "default", pod['metadata']['name'], pod['kind'], threshold_value, resource_type)
 
+
+    update_tasks(json.dumps({
+        "task" : f"{pod['metadata']['name']}: HPA threshold for {resource_type.upper()} was set to {threshold_value}%",
+        "date" : get_current_date()
+    }))
     print("Finished setting HPA threshold! Success!")
     return res
 
@@ -201,22 +210,33 @@ async def adaptive_hpa(pod, resource_type, pod_project, pod_cluster):
 def build_limit_utilization_query(project_id, cluster_name, cluster_zone, pod, resource_type):
     pod_name, pod_type, pod_namespace = pod['metadata']['name'], pod['kind'], pod['metadata']['namespace']
 
+    # Create the base query
     query = (f"fetch k8s_container | metric 'kubernetes.io/container/{resource_type}/limit_utilization' | filter "
              f"resource.project_id == '{project_id}' && "
              f"(metadata.system_labels.top_level_controller_name == '{pod_name}' && "
              f"metadata.system_labels.top_level_controller_type == '{pod_type}') && "
              f"(resource.cluster_name == '{cluster_name}' && resource.location == '{cluster_zone}' && "
-             f"resource.namespace_name == '{pod_namespace}') | group_by 1m, [value_limit_utilization_mean: mean("
-             f"value.limit_utilization)] | every 1m | group_by [metadata.system_labels.top_level_controller_name], "
-             f"[value_limit_utilization_mean_percentile: percentile(value_limit_utilization_mean, 50)] | within(2h)")
+             f"resource.namespace_name == '{pod_namespace}')")
 
+    # Conditionally add the memory_type filter for memory resources
+    if resource_type == "memory":
+        query += " && (metric.memory_type == 'non-evictable')"
+
+    # Add the rest of the query
+    query += f" | group_by 1m, [value_limit_utilization_mean: mean(value.limit_utilization)] | every 1m | " \
+             f"group_by [metadata.system_labels.top_level_controller_name], " \
+             f"[value_limit_utilization_mean_percentile: percentile(value_limit_utilization_mean, 50)] | within(2h)"
+
+    print(query)
     return query
+
 
 
 async def fetch_forecast_threshold(resource_limit_utilization):
     endpoint = "https://europe-west3-netprovis-397212.cloudfunctions.net/forecast-resources"
     headers = get_headers(identity_token)
     payload = json.dumps(resource_limit_utilization)
+    print("Payload: ", resource_limit_utilization)
     response, status_code = await make_request(endpoint, method="post", data=payload, headers=headers)
 
     return response.get('threshold')
@@ -239,6 +259,7 @@ async def create_hpa(cluster_endpoint, namespace, pod_name, pod_type, threshold_
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 409:  # HPA already exists, update it
             print(updated_payload)
+            print("Threshold set: ", threshold_value, "%")
             response, status_code = await make_request(method="put",
                                                        url=hpa_endpoint, headers=headers, data=updated_payload)
             return response
@@ -261,15 +282,22 @@ def metric_exists(metrics_list, res_type):
 
 
 def generate_payload(pod_name, pod_type, threshold_value, resource_type, existing_hpa_metrics):
-    payload = copy.deepcopy(dict(HPA_TEMPLATE))
+    payload = copy.deepcopy(HPA_TEMPLATE)
     payload['metadata']['name'] = f"adaptive-hpa-for-{pod_name}"
     payload['spec']['scaleTargetRef'].update({
         'kind': pod_type,
         'name': pod_name
     })
-    payload['spec']['metrics'] = existing_hpa_metrics
 
-    if not metric_exists(existing_hpa_metrics, resource_type):
+    # Check if a metric with the specified resource_type already exists
+    for metric in existing_hpa_metrics:
+        if metric.get("type", "") == "Resource" and metric.get("resource", {}).get("name", "") == resource_type:
+            # Update the existing metric's averageUtilization
+            metric["resource"]["target"]["averageUtilization"] = int(threshold_value)
+            payload['spec']['metrics'] = existing_hpa_metrics
+            break
+    else:
+        # If the metric doesn't exist, create a new one
         new_metric = {
             "type": "Resource",
             "resource": {
@@ -281,6 +309,7 @@ def generate_payload(pod_name, pod_type, threshold_value, resource_type, existin
             }
         }
         payload['spec']['metrics'].append(new_metric)
+
     return payload
 
 
@@ -355,44 +384,39 @@ def run_command(command):
             command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True,
             check=True,
-            shell=shell
+            text=True,
+            shell=False
         )
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        print(f"Error running command: {e}")
-        return ""
+        error_string = f"Error running command: {e}"
+        print(error_string)
+        return error_string
 
 
-async def deploy_kong_gateway():
-    helm_repo_url = "https://charts.konghq.com"
-    chart_name = "kong/kong"
-
-    # Add Kong Helm Chart repository
-    run_command(["helm", "repo", "add", "kong", helm_repo_url])
+async def deploy_with_helm(helm_repo_url, chart_name, image, cnf_name, params):
+    run_command(["helm", "repo", "add", image, helm_repo_url])
     run_command(["helm", "repo", "update"])
-
-    # Run the Helm command to search for the Kong chart
-    result = run_command(["helm", "search", "repo", chart_name, "--devel", "--versions"])
-    version = ""
-
-    # Check if the command was successful
-    if result:
-        # Split the output by lines and extract the version number using regex
-        lines = result.splitlines()
-        if len(lines) > 1:
-            # The version info is usually in the second line of the output
-            match = re.search(r'\b(\d+\.\d+\.\d+)\b', lines[1])
-            if match:
-                version = match.group(1)
-
-    # Deploy Kong
-    chart_path = os.path.join("kong", f"kong-{version}.tgz")
-    run_command(["helm", "install", "kong", chart_path])
+    res = run_command(["helm", "install", cnf_name, chart_name, "--set",
+                       f"resources.limits.cpu={params['cpuLimit']},"
+                       f"resources.limits.memory={params['memoryLimit']},"
+                       f"resources.requests.cpu={params['cpuRequested']},"
+                       f"resources.requests.memory={params['memoryRequested']}"
+                       ])
 
     # Fetch the external IP to access Kong (may need to wait a bit before the external IP is available)
-    print("Waiting for the Kong Gateway to be assigned an external IP. This may take a few minutes...")
-    kong_services = run_command(["kubectl", "get", "service", "-l", "app.kubernetes.io/name=kong", "-o", "jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'"])
+    # print("Waiting for the Kong Gateway to be assigned an external IP. This may take a few minutes...")
+    # kong_services = run_command(["kubectl", "get", "service", "-l", "app.kubernetes.io/name=kong", "-o", "jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'"])
 
-    return f"Kong Gateway is accessible at: http://{kong_services.strip()}/"
+    # return f"Kong Gateway is accessible at: http://{kong_services.strip()}/"
+    return res
+
+def update_tasks(task):
+    global tasks
+    if len(tasks) > 100:
+        tasks = tasks[1:]
+        tasks.append(task)
+    else:
+        tasks.append(task)
+

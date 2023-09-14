@@ -12,18 +12,6 @@
     align-items: flex-start;
 }
 
-.dashboard-container {
-    padding: 20px 15px 20px 15px;
-    background-color: #444444;
-    border: #888888 solid 1px;
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
-    color: white;
-    border-radius: 25px;
-    margin-top: 4vh;
-    justify-content: center;
-    display: block;
-}
-
 @media (max-width: 576px) { /* sm breakpoint */
     /* Add styles specific for mobile view */
     .dashboard-container {

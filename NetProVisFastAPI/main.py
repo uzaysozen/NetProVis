@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from NetProVisFastAPI.models.api_models import *
@@ -239,6 +240,8 @@ async def stop_hpa(p: Pod):
 @app.post("/deploy_cnf")
 async def deploy_cnf(c: CNF):
     cnf_name = c.cnf.lower().replace(" ", "")
+    limit_params = json.loads(c.params)
+    print(limit_params)
     # file_path = os.path.join("NetProVisFastAPI", "deployments", f"{cnf_name}-deployment.yml")
 
     # if not os.path.exists(file_path):
@@ -247,9 +250,27 @@ async def deploy_cnf(c: CNF):
     if helper_functions.cluster and helper_functions.project:
         if cnf_name == 'gateway':
             try:
-                gateway_service = await deploy_kong_gateway()
-                return gateway_service
+                res = await deploy_with_helm("https://charts.konghq.com", "kong/kong", "kong", cnf_name, limit_params)
+
+                if res[:5] == "Error":
+                    raise HTTPException(status_code=500, detail=res)
+                return res
             except Exception as e:
                 raise HTTPException(status_code=500, detail=e)
+        elif cnf_name == 'firewall':
+            try:
+                res = await deploy_with_helm("https://ergon.github.io/airlock-helm-charts/", "airlock/microgateway",
+                                             "airlock", cnf_name, limit_params)
+                if res[:5] == "Error":
+                    raise HTTPException(status_code=500, detail=res)
+                return res
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=e)
+
     else:
         raise HTTPException(status_code=500, detail="Could not deploy!")
+
+
+@app.get("/get_tasks")
+def get_tasks():
+    return helper_functions.tasks

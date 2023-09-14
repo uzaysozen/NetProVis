@@ -1,14 +1,14 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import '../../styles/DashboardPage.css';
-import {Content} from "antd/es/layout/layout";
-import {Button, Col, Row, Spin} from "antd";
+import { Content } from "antd/es/layout/layout";
+import { Button, Col, Row } from "antd";
 import ProjectSelectModal from "../modals/ProjectSelectModal";
 import ProjectContainer from "./dashboard/projectContainer";
 import PodsContainer from "./dashboard/podsContainer";
 import ResourcesContainer from "./dashboard/resourcesContainer";
 import TasksContainer from "./dashboard/tasksContainer";
 import BigResourceChart from "./dashboard/bigChart";
-import {ReloadOutlined} from "@ant-design/icons";
+import { ReloadOutlined } from "@ant-design/icons";
 
 const DashboardPage = () => {
     // State to manage manual reload
@@ -35,11 +35,13 @@ const DashboardPage = () => {
             setReload(prevState => !prevState);
         }, 60000);
 
-        return () => {clearInterval(interval)
-        setInterval(() => {
-            setReload(false);
-        }, 3000);
-        clearInterval(interval)}; // Clear the interval on unmount
+        return () => {
+            clearInterval(interval)
+            setInterval(() => {
+                setReload(false);
+            }, 3000);
+            clearInterval(interval)
+        }; // Clear the interval on unmount
 
     }, [reload]);
 
@@ -47,24 +49,24 @@ const DashboardPage = () => {
         return (
             <Content className="dashboard-content">
                 {/* Manual Reload Button */}
-                {/* Manual Reload Button */}
-                <div style={{display: "flex", justifyContent: "center", alignItems: "center", marginTop: "20px"}}>
+                <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
                     <Button
-                        type="text"
+                        type="primary"
+                        shape="round"
+                        size="large"
                         onClick={handleReload}
+                        icon={<ReloadOutlined/>}
+                        loading={reload}
                         style={{
+                            fontSize: "16px",
+                            fontWeight: "bold",
+                            backgroundColor: reload ? "#1890ff" : "#00b347", // Loading and loaded colors
+                            borderColor: reload ? "#1890ff" : "#00b347", // Loading and loaded colors
                             color: "white",
-                            background: "transparent",
-                            border: "none",
-                            fontSize: "24px",
-                            outline: "none",
+                            marginRight: "8px",
                         }}
                     >
-                        {reload ? (
-                            <Spin indicator={<ReloadOutlined style={{fontSize: "24px", color: "white"}} spin/>}/>
-                        ) : (
-                            <ReloadOutlined style={{fontSize: "24px"}}/>
-                        )}
+                        {reload ? "Refreshing..." : "Refresh"}
                     </Button>
                 </div>
                 <Row gutter={24}>
@@ -89,7 +91,7 @@ const DashboardPage = () => {
                     </Col>
                     <Col className="gutter-row" span={6}>
                         <Row className="dashboard-container">
-                            <TasksContainer/>
+                            <TasksContainer reload={reload}/>
                         </Row>
                     </Col>
                 </Row>
