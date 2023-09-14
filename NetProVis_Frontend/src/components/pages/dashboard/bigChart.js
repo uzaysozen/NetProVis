@@ -3,14 +3,6 @@ import { Chart } from "react-google-charts";
 
 const BigResourceChart = () => {
     const options = {
-        title: "CPU and Memory Usage",
-        titleTextStyle: {
-            color: "white", // Set title text color to white
-            fontSize: 20, // Set title font size
-            bold: true, // Make title bold
-            italic: false, // Make title not italic
-            textAlign: "center", // Center align the title
-        },
         pointSize: 4,
         hAxis: {
             title: "Time",
@@ -18,11 +10,11 @@ const BigResourceChart = () => {
                 color: "white", // Set x-axis title text color to white
             },
             textStyle: {
-                color: "white", // Set x-axis value text color to white
+                color: "transparent", // Set x-axis value text color to white
             },
+            slantedText: true
         },
         vAxis: {
-            title: "Percentage",
             titleTextStyle: {
                 color: "white", // Set y-axis title text color to white
             },
@@ -33,13 +25,13 @@ const BigResourceChart = () => {
             },
             gridlines: { color: "#636366" },
             minorGridlines: {color: "#636366" },
-            baselineColor: "transparent",
+            baselineColor: "#909196",
         },
         legend: {
             textStyle: {
                 color: "white", // Set legend text color to white
             },
-            position: "bottom",
+            position: "top",
         },
         backgroundColor: "transparent",
         lineWidth: 2, // Set line width to make it thicker

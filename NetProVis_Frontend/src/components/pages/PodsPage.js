@@ -6,7 +6,7 @@ import {getPods, activateHPA, stopHPA} from '../../util/api';
 import '../../styles/PodsPage.css';
 import CNFModal from "../modals/CNFModal";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCloudUploadAlt } from '@fortawesome/free-solid-svg-icons';
+import {faCloudUploadAlt, faCube} from '@fortawesome/free-solid-svg-icons';
 
 const {Title} = Typography;
 
@@ -43,7 +43,7 @@ const PodItem = ({item, activatedResource, loading, handleActivate, handleStop})
         <Row className="dashboard-container">
             <Row align="middle" gutter={8}>
                 <Col style={{ marginRight: "10px", marginBottom: "15px" }}>
-                    <CodeSandboxSquareFilled style={{ fontSize: "30px", color: "#1890ff" }} />
+                    <FontAwesomeIcon icon={faCube} size="2x" style={{color: "#1890ff"}}/>
                 </Col>
                 <Col>
                     <Title level={3} className="dashboard-title">

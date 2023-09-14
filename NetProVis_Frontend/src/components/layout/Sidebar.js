@@ -5,9 +5,7 @@ import {
   ClockCircleFilled,
   CodepenSquareFilled,
   DashboardFilled,
-  EnvironmentFilled,
   FlagFilled,
-  HomeFilled,
   MenuOutlined,
   SettingFilled
 } from '@ant-design/icons';
@@ -54,9 +52,6 @@ const Sidebar = () => {
         </Menu.Item>
         <Menu.Item key="/alerts" icon={<AlertFilled />}>
           <Link to="/alerts">Alerts</Link>
-        </Menu.Item>
-        <Menu.Item key="/map" icon={<EnvironmentFilled />}>
-          <Link to="/map">Map</Link>
         </Menu.Item>
         <Menu.Item key="/settings" icon={<SettingFilled />}>
           <Link to="/settings">Settings</Link>

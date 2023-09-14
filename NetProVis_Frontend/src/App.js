@@ -80,9 +80,7 @@ function App() {
         <Route path="/reports" element={loggedIn ? <MainLayout signOut={signOut} children={<ReportsPage />} /> : <Navigate to="/" />} />
         <Route path="/history" element={loggedIn ? <MainLayout signOut={signOut} children={<HistoryPage />} /> : <Navigate to="/" />} />
         <Route path="/alerts" element={loggedIn ? <MainLayout signOut={signOut} children={<AlertsPage />} /> : <Navigate to="/" />} />
-        <Route path="/map" element={loggedIn ? <MainLayout signOut={signOut} children={<MapPage />} /> : <Navigate to="/" />} />
         <Route path="/settings" element={loggedIn ? <MainLayout signOut={signOut} children={<SettingsPage />} /> : <Navigate to="/" />} />
-        {/* 404 Not Found Page */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
