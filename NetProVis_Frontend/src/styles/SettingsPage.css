@@ -1,13 +1,13 @@
 .settings-container {
-    padding: 25px;
+    padding: 20px 15px 20px 15px;
     background-color: #444444;
-    color: white;
-    height: 55vh;
-    border-radius: 25px;
-    margin-top: 10vh;
-    justify-content: center;
-    border: #888888 solid 1px;
+    border: #888888 solid 2px;
     box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 5px;
+    margin-top: 2.5vh;
+    justify-content: center;
+    display: block;
 }
 
 .settings-row {

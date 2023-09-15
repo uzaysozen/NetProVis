@@ -182,6 +182,10 @@ def get_current_date():
     formatted_datetime = current_datetime.strftime("%B %d, %Y, %I:%M:%S %p")
     return formatted_datetime
 
+async def get_resource_limit_utilization(project_id, cluster_name, cluster_zone, pod, resource_type):
+    query = build_limit_utilization_query(project_id, cluster_name, cluster_zone, pod, resource_type)
+    resource_limit_utilization = await get_resource_time_series_data(project_id, query, resource_type)
+    return resource_limit_utilization
 
 async def adaptive_hpa(pod, resource_type, pod_project, pod_cluster):
     project_id, cluster_name, cluster_zone = pod_project['projectId'], pod_cluster['name'], pod_cluster['zone']
@@ -189,8 +193,7 @@ async def adaptive_hpa(pod, resource_type, pod_project, pod_cluster):
     if not project_id or not cluster_name:
         raise HTTPException(status_code=500, detail="Could not find project id or cluster name")
 
-    query = build_limit_utilization_query(project_id, cluster_name, cluster_zone, pod, resource_type)
-    resource_limit_utilization = await get_resource_time_series_data(project_id, query, resource_type)
+    resource_limit_utilization = await get_resource_limit_utilization(project_id, cluster_name, cluster_zone, pod, resource_type)
 
     threshold_value = await fetch_forecast_threshold(resource_limit_utilization)
 

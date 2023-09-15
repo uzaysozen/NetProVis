@@ -1,32 +1,11 @@
-import React, {useEffect, useState} from 'react';
-import {Badge, Col, ConfigProvider, List, Row, Typography} from "antd";
-import {CodeSandboxSquareFilled, FolderOpenFilled, LoadingOutlined} from "@ant-design/icons";
-import axios from "axios";
+import React from 'react';
+import {Badge, Col, ConfigProvider, List, Row, Spin, Typography} from "antd";
+import {CodeSandboxSquareFilled, LoadingOutlined} from "@ant-design/icons";
 import {Link} from "react-router-dom";
 
 const {Title} = Typography;
 
-const PodsContainer = ({reload}) => {
-    const [loading, setLoading] = useState(true);
-    const [data, setData] = useState([]);
-
-    const fetchData = () => {
-        setLoading(true);
-        axios
-            .get('http://localhost:8000/get_pods')
-            .then(response => {
-                setData(response.data)
-                setLoading(false);
-            })
-            .catch(error => {
-                console.log('Error:', error);
-                setLoading(false);
-            });
-    };
-
-    useEffect(() => {
-        fetchData();
-    }, [reload]);
+const PodsContainer = ({reload, pods}) => {
 
     return (
         <Col>
@@ -50,9 +29,9 @@ const PodsContainer = ({reload}) => {
                     },
                 }}
             >
-                {loading ? (
+                {reload ? (
                     <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '4rem'}}>
-                        <LoadingOutlined style={{fontSize: 40}} spin/>
+                        <Spin indicator={<LoadingOutlined style={{fontSize: 40}} spin/>}/>
                     </div>
                 ) : (
                     <Row>
@@ -64,7 +43,7 @@ const PodsContainer = ({reload}) => {
                         }}>
                             <List
                                 itemLayout="horizontal"
-                                dataSource={data}
+                                dataSource={pods}
                                 renderItem={(item, index) => (
                                     <List.Item style={{padding: 0, marginLeft: "5px"}}
                                                actions={[<Link to="/pods">Details</Link>]}>

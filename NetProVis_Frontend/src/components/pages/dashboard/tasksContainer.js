@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {CalendarFilled, LoadingOutlined, PieChartFilled} from "@ant-design/icons";
-import {Col, ConfigProvider, List, Row, Typography} from "antd";
+import {Col, ConfigProvider, List, Row, Spin, Typography} from "antd";
 import {getTasks} from "../../../util/api";
 
 const {Title} = Typography;
@@ -58,7 +58,7 @@ const TasksContainer = ({reload}) => {
                         }}
                     > {loading ? (
                         <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '4rem'}}>
-                            <LoadingOutlined style={{fontSize: 40}} spin/>
+                            <Spin indicator={<LoadingOutlined style={{fontSize: 40}} spin/>}/>
                         </div>
                     ) : (
                         <List

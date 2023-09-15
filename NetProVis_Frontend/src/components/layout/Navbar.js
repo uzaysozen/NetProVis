@@ -16,7 +16,7 @@ const {Header} = Layout;
 const Navbar = ({signOut}) => {
     const [user, setUser] = useState([]);
     const [clusters, setClusters] = useState([]);
-    const [clusterName, setClusterName] = useState([]);
+    const [clusterName, setClusterName] = useState("Select Cluster");
 
     useEffect(() => {
         axios
@@ -37,6 +37,10 @@ const Navbar = ({signOut}) => {
             .catch(error => {
                 console.log('Error:', error);
             });
+        const cName = localStorage.getItem("clusterName");
+        if (cName !== null) {
+            setClusterName(cName);
+        }
     }, []);
 
     const goToConsole = () => {
@@ -60,6 +64,7 @@ const Navbar = ({signOut}) => {
             .post('http://localhost:8000/set_cluster', {selected_cluster: JSON.stringify(cluster)})
             .then(response => {
                 setClusterName(cluster.name)
+                localStorage.setItem("clusterName", cluster.name)
                 console.log(response.data)
             })
             .catch(error => {
@@ -68,11 +73,8 @@ const Navbar = ({signOut}) => {
     };
     const clusterMenu = (
         <Menu>
-            <Menu.Item key={0}>
-                    Choose Cluster
-            </Menu.Item>
             {clusters.map((cluster, index) => (
-                <Menu.Item key={index + 1} onClick={() => handleClusterMenuClick(cluster)}>
+                <Menu.Item key={index} onClick={() => handleClusterMenuClick(cluster)}>
                     {cluster.name}
                 </Menu.Item>
             ))}

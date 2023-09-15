@@ -1,22 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import '../../styles/DashboardPage.css';
-import { Content } from "antd/es/layout/layout";
-import { Button, Col, Row } from "antd";
+import {Content} from "antd/es/layout/layout";
+import {Button, Col, Row} from "antd";
 import ProjectSelectModal from "../modals/ProjectSelectModal";
 import ProjectContainer from "./dashboard/projectContainer";
 import PodsContainer from "./dashboard/podsContainer";
 import ResourcesContainer from "./dashboard/resourcesContainer";
 import TasksContainer from "./dashboard/tasksContainer";
-import BigResourceChart from "./dashboard/bigChart";
-import { ReloadOutlined } from "@ant-design/icons";
+import BigResourceChart from "./dashboard/bigResourceChart";
+import {ReloadOutlined} from "@ant-design/icons";
+import {getPods} from "../../util/api";
+import ResourceValuesTable from "./dashboard/resourceValuesTable";
+import NetworkStatsContainer from "./dashboard/networkStats";
 
 const DashboardPage = () => {
     // State to manage manual reload
     const [reload, setReload] = useState(false);
+    const [podsData, setPodsData] = useState([]);
 
     // Function to handle manual reload
     const handleReload = () => {
         setReload((prevReload) => !prevReload);
+    };
+
+    const fetchPodsData = () => {
+        getPods()
+            .then(response => {
+                setPodsData(response.data)
+            })
+            .catch(error => {
+                console.log('Error:', error);
+            });
     };
 
     const storedProject = JSON.parse(localStorage.getItem('selectedProject'));
@@ -30,6 +44,9 @@ const DashboardPage = () => {
     }
 
     useEffect(() => {
+        setReload(true);
+        fetchPodsData();
+        setReload(false);
         // Automatic reload every 1 minute
         const interval = setInterval(() => {
             setReload(prevState => !prevState);
@@ -81,7 +98,7 @@ const DashboardPage = () => {
                     </Col>
                     <Col className="gutter-row" span={6}>
                         <Row className="dashboard-container">
-                            <PodsContainer reload={reload}/>
+                            <PodsContainer reload={reload} pods={podsData}/>
                         </Row>
                     </Col>
                     <Col className="gutter-row" span={6}>
@@ -98,19 +115,19 @@ const DashboardPage = () => {
                 <Row gutter={24}>
                     <Col className="gutter-row" span={15}>
                         <Row className="dashboard-container">
-                            <BigResourceChart/>
+                            <BigResourceChart reload={reload} pods={podsData}/>
                         </Row>
                     </Col>
                     <Col className="gutter-row" span={9}>
                         <Row className="dashboard-container">
-                            {/* Add content here for the right side */}
+                            <NetworkStatsContainer reload={reload}/>
                         </Row>
                     </Col>
                 </Row>
                 <Row gutter={24}>
                     <Col className="gutter-row" span={24}>
                         <Row className="dashboard-container">
-                            {/* Add content here for the bottom */}
+                            <ResourceValuesTable reload={reload}/>
                         </Row>
                     </Col>
                 </Row>

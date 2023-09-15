@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Col, ConfigProvider, Progress, Row, Statistic, Typography } from "antd";
+import {Col, ConfigProvider, Progress, Row, Spin, Statistic, Typography} from "antd";
 import { LoadingOutlined, PieChartFilled } from "@ant-design/icons";
 import axios from "axios";
 
@@ -61,7 +61,7 @@ const ResourcesContainer = ({ reload }) => {
                 {/* Conditionally render loading spinner or content */}
                 {loading ? (
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '4rem' }}>
-                        <LoadingOutlined style={{ fontSize: 40 }} spin />
+                        <Spin indicator={<LoadingOutlined style={{fontSize: 40}} spin/>}/>
                     </div>
                 ) : (
                     <Row gutter={16}>

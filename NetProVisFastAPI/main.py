@@ -274,3 +274,21 @@ async def deploy_cnf(c: CNF):
 @app.get("/get_tasks")
 def get_tasks():
     return helper_functions.tasks
+
+
+@app.post("/get_resource_limit_utilization")
+async def get_resource_limit_utilization(p: Pod):
+    pod = json.loads(p.selected_pod)
+    resource_type = p.resource_type
+    if helper_functions.project and helper_functions.cluster:
+        project_id = helper_functions.project['projectId']
+        cluster_name = helper_functions.cluster['name']
+        cluster_zone = helper_functions.cluster['zone']
+        try:
+            res = await helper_functions.get_resource_limit_utilization(project_id, cluster_name, cluster_zone, pod,
+                                                                        resource_type)
+            return res
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=e)
+    else:
+        raise HTTPException(status_code=500, detail="Could not get resource limit utilization!")

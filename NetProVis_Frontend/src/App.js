@@ -58,6 +58,7 @@ function App() {
         checkLoginStatus()
         setIsLoading(false);
         localStorage.removeItem("selectedProject");
+        localStorage.removeItem("clusterName");
       })
       .catch(error => {
         console.log('Error:', error);
