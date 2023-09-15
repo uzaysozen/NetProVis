@@ -4,7 +4,7 @@ import LoginPage from "./components/pages/LoginPage";
 import DashboardPage from "./components/pages/DashboardPage";
 import axios from "axios";
 import './styles/App.css';
-import PodsPage from "./components/pages/PodsPage";
+import WorkloadsPage from "./components/pages/WorkloadsPage";
 import MainLayout from "./components/layout/Layout";
 import TasksPage from "./components/pages/TasksPage";
 import ReportsPage from "./components/pages/ReportsPage";
@@ -76,7 +76,7 @@ function App() {
       <Routes>
         <Route exact path="/" element={loggedIn ? <Navigate to="/dashboard" /> : <LoginPage signIn={signIn} />} />
         <Route path="/dashboard" element={loggedIn ? <MainLayout signOut={signOut} children={<DashboardPage />} /> : <Navigate to="/" />} />
-        <Route path="/pods" element={loggedIn ? <MainLayout signOut={signOut} children={<PodsPage />} /> : <Navigate to="/" />} />
+        <Route path="/pods" element={loggedIn ? <MainLayout signOut={signOut} children={<WorkloadsPage />} /> : <Navigate to="/" />} />
         <Route path="/tasks" element={loggedIn ? <MainLayout signOut={signOut} children={<TasksPage />} /> : <Navigate to="/" />} />
         <Route path="/reports" element={loggedIn ? <MainLayout signOut={signOut} children={<ReportsPage />} /> : <Navigate to="/" />} />
         <Route path="/history" element={loggedIn ? <MainLayout signOut={signOut} children={<HistoryPage />} /> : <Navigate to="/" />} />

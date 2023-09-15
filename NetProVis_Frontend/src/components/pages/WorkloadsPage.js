@@ -1,12 +1,13 @@
 import React, {useEffect, useState} from 'react';
-import {Button, Col, Row, Typography} from 'antd';
+import {Button, Col, Popover, Row, Typography} from 'antd';
 import {Content} from "antd/es/layout/layout";
-import {CodeSandboxSquareFilled, LoadingOutlined, PieChartFilled, PlusOutlined} from '@ant-design/icons';
+import {LoadingOutlined} from '@ant-design/icons';
 import {getPods, activateHPA, stopHPA} from '../../util/api';
 import '../../styles/PodsPage.css';
 import CNFModal from "../modals/CNFModal";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faCloudUploadAlt, faCube} from '@fortawesome/free-solid-svg-icons';
+import yaml, {safeDump, YAML} from 'js-yaml';
 
 const {Title} = Typography;
 
@@ -38,36 +39,83 @@ const HPAButton = ({resource, actionType, pod, loadingState, onClickAction, disa
 };
 
 
-const PodItem = ({item, activatedResource, loading, handleActivate, handleStop}) => (
-    <Col md={12} className="gutter-row">
-        <Row className="dashboard-container">
-            <Row align="middle" gutter={8}>
-                <Col style={{ marginRight: "10px", marginBottom: "15px" }}>
-                    <FontAwesomeIcon icon={faCube} size="2x" style={{color: "#1890ff"}}/>
-                </Col>
-                <Col>
-                    <Title level={3} className="dashboard-title">
-                        {item.metadata.name}
-                    </Title>
-                </Col>
-            </Row>
-            {['cpu', 'memory', 'all'].map(resource => (
-                activatedResource === resource ?
-                    <HPAButton key={resource} resource={resource} disabled={false} actionType="stop" pod={item}
-                               loadingState={loading}
-                               onClickAction={handleStop}/>
-                    :
-                    <HPAButton key={resource} resource={resource}
-                               disabled={resource !== 'all' && activatedResource === 'all'}
-                               actionType="activate"
-                               pod={item}
-                               loadingState={loading} onClickAction={handleActivate}/>
-            ))}
-        </Row>
-    </Col>
-);
+const PodDetails = ({ pod }) => {
+    const formattedYaml = yaml.dump(pod);
+    const preStyle = {
+        maxHeight: '200px',  // Adjust the maximum height as needed
+        overflowY: 'auto',   // Add vertical scrollbar when content overflows
+        whiteSpace: 'pre-wrap'  // Preserve line breaks and wrap text
+    };
 
-const PodsPage = () => {
+    return (
+        <div>
+            <h3>Pod Details:</h3>
+            <pre style={preStyle}>{formattedYaml}</pre>
+        </div>
+    );
+};
+
+
+const PodItem = ({ item, activatedResource, loading, handleActivate, handleStop }) => {
+    const [showDetails, setShowDetails] = useState(false);
+
+    const toggleDetails = () => {
+        setShowDetails(!showDetails);
+    };
+
+    return (
+        <Col md={12} className="gutter-row">
+            <Row className="dashboard-container">
+                <Row align="middle" gutter={8}>
+                    <Col style={{ marginRight: "10px", marginBottom: "15px" }}>
+                        <FontAwesomeIcon icon={faCube} size="2x" style={{ color: "#1890ff" }} />
+                    </Col>
+                    <Col>
+                        <Title level={3} className="dashboard-title">
+                            {item.metadata.name}
+                        </Title>
+                    </Col>
+                </Row>
+                {['cpu', 'memory', 'all'].map(resource => (
+                    activatedResource === resource ? (
+                        <HPAButton
+                            key={resource}
+                            resource={resource}
+                            disabled={false}
+                            actionType="stop"
+                            pod={item}
+                            loadingState={loading}
+                            onClickAction={handleStop}
+                        />
+                    ) : (
+                        <HPAButton
+                            key={resource}
+                            resource={resource}
+                            disabled={resource !== 'all' && activatedResource === 'all'}
+                            actionType="activate"
+                            pod={item}
+                            loadingState={loading}
+                            onClickAction={handleActivate}
+                        />
+                    )
+                ))}
+                <Button
+                    type="default"
+                    shape="round"
+                    size="medium"
+                    style={{ marginTop: "15px", marginLeft: "60px" }}
+                    onClick={toggleDetails}
+                >
+                    {showDetails ? "Hide Details" : "See Details"}
+                </Button>
+                {showDetails && <PodDetails pod={item} />}
+            </Row>
+        </Col>
+    );
+};
+
+
+const WorkloadsPage = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState({});
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -166,4 +214,4 @@ const PodsPage = () => {
 
 };
 
-export default PodsPage;
+export default WorkloadsPage;

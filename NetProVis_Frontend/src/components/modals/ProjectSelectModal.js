@@ -21,14 +21,17 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload, navbarReload}) => {
             onDashboardReload(true)
         }
         if (selectedProject) {
+            localStorage.removeItem("clusterName");
             axios
             .post('http://localhost:8000/set_project', {selected_project: selectedProject})
             .then(response => {
                 console.log(response)
+                console.log("Removing 'clusterName'")
             })
             .catch(error => {
                 console.log('Error:', error);
             });
+
         }
         window.location.reload()
     };

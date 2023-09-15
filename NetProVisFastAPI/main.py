@@ -99,16 +99,21 @@ def set_project(p: Project):
 
 @app.post("/set_cluster")
 def set_cluster(c: GKECluster):
-    helper_functions.cluster = json.loads(c.selected_cluster)
-    gcloud_command = ['gcloud', 'container', 'clusters', 'get-credentials', helper_functions.cluster['name'],
-                      '--zone', helper_functions.cluster['zone'],
-                      '--project', helper_functions.project['projectId']]
+    cluster = json.loads(c.selected_cluster)
+    print(cluster)
+    if cluster != {}:
+        helper_functions.cluster = cluster
+        gcloud_command = ['gcloud', 'container', 'clusters', 'get-credentials', helper_functions.cluster['name'],
+                          '--zone', helper_functions.cluster['zone'],
+                          '--project', helper_functions.project['projectId']]
 
-    try:
-        run_command(gcloud_command)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    return helper_functions.cluster
+        try:
+            run_command(gcloud_command)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+        return helper_functions.cluster
+    else:
+        helper_functions.cluster = cluster
 
 
 @app.get("/projects")
