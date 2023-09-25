@@ -130,20 +130,23 @@ async def update_hpa_metrics(existing_hpa, resource_type, hpa_endpoint, headers)
 
 
 async def delete_all_hpas():
-    cluster_endpoint = cluster['privateClusterConfig']['publicEndpoint']
-    namespace_endpoint = f"https://{cluster_endpoint}/api/v1/namespaces"
+    if cluster:
+        cluster_endpoint = cluster['privateClusterConfig']['publicEndpoint']
+        namespace_endpoint = f"https://{cluster_endpoint}/api/v1/namespaces"
 
-    headers = get_headers(access_token)
+        headers = get_headers(access_token)
 
-    all_namespaces = await get_all_namespaces(namespace_endpoint, headers)
+        all_namespaces = await get_all_namespaces(namespace_endpoint, headers)
 
-    deleted_hpas_count = 0
+        deleted_hpas_count = 0
 
-    for ns in all_namespaces:
-        namespace_name = ns['metadata']['name']
-        deleted_hpas_count += await delete_hpas_in_namespace(namespace_name, cluster_endpoint, headers)
+        for ns in all_namespaces:
+            namespace_name = ns['metadata']['name']
+            deleted_hpas_count += await delete_hpas_in_namespace(namespace_name, cluster_endpoint, headers)
 
-    return {"status": f"Deleted {deleted_hpas_count} HPAs across all namespaces."}
+        return {"status": f"Deleted {deleted_hpas_count} HPAs across all namespaces."}
+    else:
+        return {"status": f"Cluster is not available."}
 
 
 async def get_all_namespaces(endpoint, headers):
@@ -389,7 +392,7 @@ def run_command(command):
             stderr=subprocess.PIPE,
             check=True,
             text=True,
-            shell=False
+            shell=shell
         )
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
