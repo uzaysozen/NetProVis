@@ -10,7 +10,6 @@ import TasksPage from "./components/pages/TasksPage";
 import ReportsPage from "./components/pages/ReportsPage";
 import HistoryPage from "./components/pages/HistoryPage";
 import AlertsPage from "./components/pages/AlertsPage";
-import MapPage from "./components/pages/MapPage";
 import SettingsPage from "./components/pages/SettingsPage";
 import LoadingScreen from "./components/screens/LoadingScreen";
 import NotFoundPage from "./components/screens/NotFoundPage";

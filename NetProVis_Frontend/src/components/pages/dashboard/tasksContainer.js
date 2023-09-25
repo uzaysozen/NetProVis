@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {CalendarFilled, LoadingOutlined, PieChartFilled} from "@ant-design/icons";
+import {CalendarFilled, LoadingOutlined} from "@ant-design/icons";
 import {Col, ConfigProvider, List, Row, Spin, Typography} from "antd";
 import {getTasks} from "../../../util/api";
 

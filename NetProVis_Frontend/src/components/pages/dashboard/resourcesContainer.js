@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {Col, ConfigProvider, Progress, Row, Spin, Statistic, Typography} from "antd";
+import {Col, ConfigProvider, Progress, Row, Spin, Typography} from "antd";
 import { LoadingOutlined, PieChartFilled } from "@ant-design/icons";
 import axios from "axios";
 

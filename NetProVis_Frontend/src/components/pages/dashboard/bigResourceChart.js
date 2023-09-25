@@ -3,6 +3,7 @@ import {Chart} from "react-google-charts";
 import {DownOutlined, LoadingOutlined} from "@ant-design/icons";
 import {Dropdown, Menu, Space, Spin} from "antd";
 import {getResLimitUtilization} from "../../../util/api";
+import '../../../styles/Chart.css';
 
 const BigResourceChart = ({reload, pods}) => {
 
@@ -108,12 +109,12 @@ const BigResourceChart = ({reload, pods}) => {
             <div style={{padding: "10px"}}>
                 <div style={{marginBottom: "15px", display: "flex", justifyContent: "end"}}>
                     <Dropdown overlay={podMenu} trigger={["click"]}>
-                        <a onClick={(e) => e.preventDefault()} style={{fontSize: "16px"}}>
+                        <button id="chart-pod-dropdown-btn" onClick={(e) => e.preventDefault()}>
                             <Space>
                                 Select a Pod
                                 <DownOutlined/>
                             </Space>
-                        </a>
+                        </button>
                     </Dropdown>
                 </div>
                 <Chart

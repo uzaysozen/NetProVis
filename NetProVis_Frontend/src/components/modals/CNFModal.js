@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {Modal, Button, Radio, Row, Col, Input, Form, Alert, Result} from 'antd';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {deployCNF, stopHPA} from "../../util/api";
+import {deployCNF} from "../../util/api";
 import {
     faBridge,
     faShieldAlt,

@@ -1,5 +1,5 @@
 import React from "react";
-import { Col, ConfigProvider, Row, Space, Spin, Table, Tag, Typography } from "antd";
+import { Col, ConfigProvider, Row, Spin, Table, Tag, Typography } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGaugeMed } from "@fortawesome/free-solid-svg-icons";
 import { LoadingOutlined } from "@ant-design/icons";

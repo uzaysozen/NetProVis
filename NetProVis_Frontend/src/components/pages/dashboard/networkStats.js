@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {Col, ConfigProvider, Row, Space, Statistic, Typography, Spin, Card} from "antd";
+import React from 'react';
+import {Col, ConfigProvider, Row, Statistic, Typography, Spin, Card} from "antd";
 import {LoadingOutlined} from "@ant-design/icons";
 import {faWifi} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -7,7 +7,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 const {Title} = Typography;
 
 const NetworkStatsContainer = ({reload}) => {
-    const [loading, setLoading] = useState(false);
+    // const [loading, setLoading] = useState(false);
 
     const renderStats = () => {
         if (reload) {

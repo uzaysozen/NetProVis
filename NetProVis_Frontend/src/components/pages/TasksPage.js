@@ -3,7 +3,7 @@ import '../../styles/DashboardPage.css';
 import {Content} from "antd/es/layout/layout";
 import {getTasks} from "../../util/api";
 import {Col, ConfigProvider, List, Row, Typography} from "antd";
-import {CalendarFilled, CodeSandboxSquareFilled, LoadingOutlined} from "@ant-design/icons";
+import {CalendarFilled, LoadingOutlined} from "@ant-design/icons";
 
 const {Title} = Typography;
 

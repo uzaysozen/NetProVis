@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Button, Col, Popover, Row, Typography} from 'antd';
+import {Button, Col, Row, Typography} from 'antd';
 import {Content} from "antd/es/layout/layout";
 import {LoadingOutlined} from '@ant-design/icons';
 import {getPods, activateHPA, stopHPA} from '../../util/api';
@@ -7,7 +7,7 @@ import '../../styles/PodsPage.css';
 import CNFModal from "../modals/CNFModal";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faCloudUploadAlt, faCube} from '@fortawesome/free-solid-svg-icons';
-import yaml, {safeDump, YAML} from 'js-yaml';
+import yaml from 'js-yaml';
 
 const {Title} = Typography;
 
