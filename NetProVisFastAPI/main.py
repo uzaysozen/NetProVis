@@ -109,6 +109,7 @@ def set_cluster(c: GKECluster):
 
         try:
             run_command(gcloud_command)
+            create_cnf_namespace()
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
         return helper_functions.cluster
@@ -189,7 +190,7 @@ async def get_cluster_memory():
 def get_pods():
     if helper_functions.cluster:
         # Execute the kubectl command to get the services
-        kubectl_command = ["kubectl", "get", "deployments", "--output=json"]
+        kubectl_command = ["kubectl", "get", "deployments", "--output=json", "--namespace=cnf-namespace"]
         try:
             stdout = run_command(kubectl_command)
             # Parse the output as JSON

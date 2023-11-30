@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta, datetime
 import copy
 import httpx
@@ -16,16 +17,6 @@ project = {}
 cluster = {}
 pods = []
 tasks = []
-
-
-def get_date_range(min_diff, given_date):
-    given_datetime = given_date.astimezone(pytz.timezone('GMT'))
-    # Calculate earlier datetime using timedelta
-    earlier_datetime = given_datetime - timedelta(minutes=min_diff)
-    # Format the date and time as 'YYYY/MM/DD-HH:MM:SS'
-    formatted_earlier_datetime = earlier_datetime.strftime('%Y/%m/%d-%H:%M:%S')
-    formatted_datetime = given_datetime.strftime('%Y/%m/%d-%H:%M:%S')
-    return formatted_earlier_datetime, formatted_datetime
 
 
 async def make_request_for_time_series(project_id, query):
@@ -180,15 +171,18 @@ async def delete_individual_hpa(hpa_endpoint, hpa_name, headers):
     delete_endpoint = f"{hpa_endpoint}/{hpa_name}"
     await make_request(delete_endpoint, method="delete", headers=headers)
 
+
 def get_current_date():
     current_datetime = datetime.now()
     formatted_datetime = current_datetime.strftime("%B %d, %Y, %I:%M:%S %p")
     return formatted_datetime
 
+
 async def get_resource_limit_utilization(project_id, cluster_name, cluster_zone, pod, resource_type):
     query = build_limit_utilization_query(project_id, cluster_name, cluster_zone, pod, resource_type)
     resource_limit_utilization = await get_resource_time_series_data(project_id, query, resource_type)
     return resource_limit_utilization
+
 
 async def adaptive_hpa(pod, resource_type, pod_project, pod_cluster):
     project_id, cluster_name, cluster_zone = pod_project['projectId'], pod_cluster['name'], pod_cluster['zone']
@@ -196,18 +190,17 @@ async def adaptive_hpa(pod, resource_type, pod_project, pod_cluster):
     if not project_id or not cluster_name:
         raise HTTPException(status_code=500, detail="Could not find project id or cluster name")
 
-    resource_limit_utilization = await get_resource_limit_utilization(project_id, cluster_name, cluster_zone, pod, resource_type)
+    resource_limit_utilization = await get_resource_limit_utilization(project_id, cluster_name, cluster_zone, pod,
+                                                                      resource_type)
 
     threshold_value = await fetch_forecast_threshold(resource_limit_utilization)
 
     cluster_endpoint = pod_cluster['privateClusterConfig']['publicEndpoint']
     res = await create_hpa(cluster_endpoint,
                            "default", pod['metadata']['name'], pod['kind'], threshold_value, resource_type)
-
-
     update_tasks(json.dumps({
-        "task" : f"{pod['metadata']['name']}: HPA threshold for {resource_type.upper()} was set to {threshold_value}%",
-        "date" : get_current_date()
+        "task": f"{pod['metadata']['name']}: HPA threshold for {resource_type.upper()} was set to {threshold_value}%",
+        "date": get_current_date()
     }))
     print("Finished setting HPA threshold! Success!")
     return res
@@ -235,7 +228,6 @@ def build_limit_utilization_query(project_id, cluster_name, cluster_zone, pod, r
 
     print(query)
     return query
-
 
 
 async def fetch_forecast_threshold(resource_limit_utilization):
@@ -408,7 +400,8 @@ async def deploy_with_helm(helm_repo_url, chart_name, image, cnf_name, params):
                        f"resources.limits.cpu={params['cpuLimit']},"
                        f"resources.limits.memory={params['memoryLimit']},"
                        f"resources.requests.cpu={params['cpuRequested']},"
-                       f"resources.requests.memory={params['memoryRequested']}"
+                       f"resources.requests.memory={params['memoryRequested']}",
+                       "--namespace", "cnf-namespace"
                        ])
 
     # Fetch the external IP to access Kong (may need to wait a bit before the external IP is available)
@@ -418,6 +411,7 @@ async def deploy_with_helm(helm_repo_url, chart_name, image, cnf_name, params):
     # return f"Kong Gateway is accessible at: http://{kong_services.strip()}/"
     return res
 
+
 def update_tasks(task):
     global tasks
     if len(tasks) > 100:
@@ -426,3 +420,6 @@ def update_tasks(task):
     else:
         tasks.append(task)
 
+
+def create_cnf_namespace():
+    run_command(["kubectl", "apply", "-f", "./NetProVisFastAPI/configuration/namespace.yaml"])
