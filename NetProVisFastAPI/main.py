@@ -282,8 +282,8 @@ def get_tasks():
     return helper_functions.tasks
 
 
-@app.post("/get_resource_limit_utilization")
-async def get_resource_limit_utilization(p: Pod):
+@app.post("/get_resource_request_utilization")
+async def get_resource_request_utilization(p: Pod):
     pod = json.loads(p.selected_pod)
     resource_type = p.resource_type
     if helper_functions.project and helper_functions.cluster:
@@ -291,10 +291,10 @@ async def get_resource_limit_utilization(p: Pod):
         cluster_name = helper_functions.cluster['name']
         cluster_zone = helper_functions.cluster['zone']
         try:
-            res = await helper_functions.get_resource_limit_utilization(project_id, cluster_name, cluster_zone, pod,
+            res = await helper_functions.get_resource_request_utilization(project_id, cluster_name, cluster_zone, pod,
                                                                         resource_type)
             return res
         except Exception as e:
             raise HTTPException(status_code=500, detail=e)
     else:
-        raise HTTPException(status_code=500, detail="Could not get resource limit utilization!")
+        raise HTTPException(status_code=500, detail="Could not get resource request utilization!")

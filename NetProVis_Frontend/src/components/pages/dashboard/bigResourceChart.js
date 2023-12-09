@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import {Chart} from "react-google-charts";
 import {DownOutlined, LoadingOutlined} from "@ant-design/icons";
 import {Dropdown, Menu, Space, Spin} from "antd";
-import {getResLimitUtilization} from "../../../util/api";
+import {getResRequestUtilization} from "../../../util/api";
 import '../../../styles/Chart.css';
 
 const BigResourceChart = ({reload, pods}) => {
@@ -74,10 +74,10 @@ const BigResourceChart = ({reload, pods}) => {
 
     const handlePodMenuClick = async (pod) => {
         setLoading(true);
-        await getResLimitUtilization(pod, "cpu").then((response) => {
+        await getResRequestUtilization(pod, "cpu").then((response) => {
             cpuData = response.data;
         }).catch((e) => console.log(e.message));
-        await getResLimitUtilization(pod, "memory").then((response) => {
+        await getResRequestUtilization(pod, "memory").then((response) => {
             memoryData = response.data;
         }).catch((e) => console.log(e.message));
 

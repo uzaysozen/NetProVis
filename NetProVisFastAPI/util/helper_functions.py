@@ -1,9 +1,7 @@
-import os
-from datetime import timedelta, datetime
+from datetime import datetime
 import copy
 import httpx
 import json
-import pytz
 import subprocess
 from fastapi import HTTPException
 from NetProVisFastAPI.k8s_templates import HPA_TEMPLATE
@@ -178,10 +176,10 @@ def get_current_date():
     return formatted_datetime
 
 
-async def get_resource_limit_utilization(project_id, cluster_name, cluster_zone, pod, resource_type):
-    query = build_limit_utilization_query(project_id, cluster_name, cluster_zone, pod, resource_type)
-    resource_limit_utilization = await get_resource_time_series_data(project_id, query, resource_type)
-    return resource_limit_utilization
+async def get_resource_request_utilization(project_id, cluster_name, cluster_zone, pod, resource_type):
+    query = build_request_utilization_query(project_id, cluster_name, cluster_zone, pod, resource_type)
+    resource_request_utilization = await get_resource_time_series_data(project_id, query, resource_type)
+    return resource_request_utilization
 
 
 async def adaptive_hpa(pod, resource_type, pod_project, pod_cluster):
@@ -190,14 +188,14 @@ async def adaptive_hpa(pod, resource_type, pod_project, pod_cluster):
     if not project_id or not cluster_name:
         raise HTTPException(status_code=500, detail="Could not find project id or cluster name")
 
-    resource_limit_utilization = await get_resource_limit_utilization(project_id, cluster_name, cluster_zone, pod,
+    resource_request_utilization = await get_resource_request_utilization(project_id, cluster_name, cluster_zone, pod,
                                                                       resource_type)
 
-    threshold_value = await fetch_forecast_threshold(resource_limit_utilization)
+    threshold_value = await fetch_forecast_threshold(resource_request_utilization)
 
     cluster_endpoint = pod_cluster['privateClusterConfig']['publicEndpoint']
     res = await create_hpa(cluster_endpoint,
-                           "default", pod['metadata']['name'], pod['kind'], threshold_value, resource_type)
+                           "cnf-namespace", pod['metadata']['name'], pod['kind'], threshold_value, resource_type)
     update_tasks(json.dumps({
         "task": f"{pod['metadata']['name']}: HPA threshold for {resource_type.upper()} was set to {threshold_value}%",
         "date": get_current_date()
@@ -206,11 +204,11 @@ async def adaptive_hpa(pod, resource_type, pod_project, pod_cluster):
     return res
 
 
-def build_limit_utilization_query(project_id, cluster_name, cluster_zone, pod, resource_type):
+def build_request_utilization_query(project_id, cluster_name, cluster_zone, pod, resource_type):
     pod_name, pod_type, pod_namespace = pod['metadata']['name'], pod['kind'], pod['metadata']['namespace']
 
     # Create the base query
-    query = (f"fetch k8s_container | metric 'kubernetes.io/container/{resource_type}/limit_utilization' | filter "
+    query = (f"fetch k8s_container | metric 'kubernetes.io/container/{resource_type}/request_utilization' | filter "
              f"resource.project_id == '{project_id}' && "
              f"(metadata.system_labels.top_level_controller_name == '{pod_name}' && "
              f"metadata.system_labels.top_level_controller_type == '{pod_type}') && "
@@ -222,19 +220,19 @@ def build_limit_utilization_query(project_id, cluster_name, cluster_zone, pod, r
         query += " && (metric.memory_type == 'non-evictable')"
 
     # Add the rest of the query
-    query += f" | group_by 1m, [value_limit_utilization_mean: mean(value.limit_utilization)] | every 1m | " \
+    query += f" | group_by 1m, [value_request_utilization_mean: mean(value.request_utilization)] | every 1m | " \
              f"group_by [metadata.system_labels.top_level_controller_name], " \
-             f"[value_limit_utilization_mean_percentile: percentile(value_limit_utilization_mean, 50)] | within(2h)"
+             f"[value_request_utilization_mean_percentile: percentile(value_request_utilization_mean, 50)] | within(2h)"
 
     print(query)
     return query
 
 
-async def fetch_forecast_threshold(resource_limit_utilization):
+async def fetch_forecast_threshold(resource_request_utilization):
     endpoint = "https://europe-west3-netprovis-397212.cloudfunctions.net/forecast-resources"
     headers = get_headers(identity_token)
-    payload = json.dumps(resource_limit_utilization)
-    print("Payload: ", resource_limit_utilization)
+    payload = json.dumps(resource_request_utilization)
+    print("Payload: ", resource_request_utilization)
     response, status_code = await make_request(endpoint, method="post", data=payload, headers=headers)
 
     return response.get('threshold')
@@ -286,15 +284,18 @@ def generate_payload(pod_name, pod_type, threshold_value, resource_type, existin
         'kind': pod_type,
         'name': pod_name
     })
-
+    print("generate_payload: ", existing_hpa_metrics)
+    existing = False
     # Check if a metric with the specified resource_type already exists
     for metric in existing_hpa_metrics:
         if metric.get("type", "") == "Resource" and metric.get("resource", {}).get("name", "") == resource_type:
             # Update the existing metric's averageUtilization
             metric["resource"]["target"]["averageUtilization"] = int(threshold_value)
             payload['spec']['metrics'] = existing_hpa_metrics
-            break
-    else:
+            existing = True
+
+    if not (existing):
+        payload['spec']['metrics'] = existing_hpa_metrics
         # If the metric doesn't exist, create a new one
         new_metric = {
             "type": "Resource",

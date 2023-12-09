@@ -25,5 +25,5 @@ export const deployCNF = async (cnf_name, values) =>
 
 export const getTasks = async () => axios.get(`${BASE_URL}/get_tasks`);
 
-export const getResLimitUtilization = async (pod, resource) =>
-    axios.post(`${BASE_URL}/get_resource_limit_utilization`, {selected_pod: JSON.stringify(pod), resource_type: resource});
+export const getResRequestUtilization = async (pod, resource) =>
+    axios.post(`${BASE_URL}/get_resource_request_utilization`, {selected_pod: JSON.stringify(pod), resource_type: resource});

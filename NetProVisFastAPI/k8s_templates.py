@@ -11,7 +11,7 @@ HPA_TEMPLATE = {
             "name": ""
         },
         "minReplicas": 1,
-        "maxReplicas": 8,
+        "maxReplicas": 3,
         "metrics": []
     }
 }
