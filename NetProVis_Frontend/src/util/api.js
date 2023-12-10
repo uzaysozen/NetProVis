@@ -31,3 +31,4 @@ export const getResRequestUtilization = async (pod, resource) =>
 export const getNetworkStats = async () => axios.get(`${BASE_URL}/get_node_network_stats`);
 export const getNetworkStatsTable = async () => axios.get(`${BASE_URL}/get_node_network_stats_table`);
 export const getPastThresholds= async () => axios.get(`${BASE_URL}/get_past_thresholds`);
+export const getReportDetails= async () => axios.get(`${BASE_URL}/get_report_details`);

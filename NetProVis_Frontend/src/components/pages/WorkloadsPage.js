@@ -76,7 +76,7 @@ const PodItem = ({ item, activatedResource, loading, handleActivate, handleStop 
                         </Title>
                     </Col>
                 </Row>
-                {['cpu', 'memory', 'all'].map(resource => (
+                {item.kind === 'Deployment' ? (['cpu', 'memory', 'all'].map(resource => (
                     activatedResource === resource ? (
                         <HPAButton
                             key={resource}
@@ -97,8 +97,7 @@ const PodItem = ({ item, activatedResource, loading, handleActivate, handleStop 
                             loadingState={loading}
                             onClickAction={handleActivate}
                         />
-                    )
-                ))}
+                    )))) : null}
                 <Button
                     type="default"
                     shape="round"

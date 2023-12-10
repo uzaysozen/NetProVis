@@ -1,11 +1,9 @@
 import React, {useEffect, useState} from "react";
-import {Layout, Menu, Dropdown, Avatar, Button, Input} from "antd";
+import {Layout, Menu, Dropdown, Avatar} from "antd";
 import {
-    BellFilled,
     DownOutlined,
     LogoutOutlined,
     RightSquareOutlined,
-    SearchOutlined
 } from "@ant-design/icons";
 import LogoImage from "../../assets/NetProVis_Logo.png";
 import '../../styles/Navbar.css'

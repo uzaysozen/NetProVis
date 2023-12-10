@@ -200,9 +200,10 @@ def get_resources():
                 all_resources.extend(resource_data.get("items", []))
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error fetching {resource}: {str(e)}")
-        print(all_resources)
+        helper_functions.resources= all_resources
         return all_resources
     else:
+        helper_functions.resources = []
         return []
 
 
@@ -262,7 +263,7 @@ async def deploy_cnf(c: CNF):
     # if not os.path.exists(file_path):
     # raise HTTPException(status_code=404, detail=f"Deployment file not found: {file_path}")
 
-    await request_deploy_cnf(cnf_name ,limit_params)
+    await request_deploy_cnf(cnf_name, limit_params)
 
 
 @app.get("/get_tasks")
@@ -310,7 +311,7 @@ async def get_node_network_stats():
                                                                            "ingress_packets_count", 1)
             round_trip_time = await get_network_stats_ingress_egress(project_id, cluster_name, "rtt", 1)
             return (
-            egress_bytes_count, egress_packets_count, ingress_bytes_count, ingress_packets_count, round_trip_time)
+                egress_bytes_count, egress_packets_count, ingress_bytes_count, ingress_packets_count, round_trip_time)
         else:
             raise HTTPException(status_code=500, detail="Could not find project id or cluster name")
     else:
@@ -344,3 +345,14 @@ async def get_node_network_stats_table():
             raise HTTPException(status_code=500, detail="Could not find project id or cluster name")
     else:
         return 0
+
+
+@app.get("/get_report_details")
+def get_report_details():
+    result = {"project": helper_functions.project,
+              "cluster": helper_functions.cluster,
+              "tasks": helper_functions.tasks,
+              "past_thresholds": helper_functions.past_thresholds,
+              "workloads": helper_functions.resources
+              }
+    return result

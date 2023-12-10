@@ -13,8 +13,8 @@ identity_token = None
 shell = True
 project = {}
 cluster = {}
-pods = []
 tasks = []
+resources = {}
 past_thresholds = {}
 
 
