@@ -225,7 +225,12 @@ async def adaptive_hpa(pod, resource_type, pod_project, pod_cluster):
     except Exception as e:
         job_id = f"adaptive_hpa_job_for_{pod['metadata']['name']}_{resource_type}"
         scheduler.remove_job(job_id)
+        update_tasks(json.dumps({
+            "task": f"{pod['metadata']['name']}: An error occurred while trying to run. Adaptive HPA for {resource_type.upper()} was deactivated.",
+            "date": get_current_date()
+        }))
         print(f"Error in job {job_id}: {e}. Job has been removed.")
+        raise HTTPException(status_code=500, detail="An error occurred while trying to run.")
 
 
 def build_request_utilization_query(project_id, cluster_name, cluster_zone, pod, resource_type):
