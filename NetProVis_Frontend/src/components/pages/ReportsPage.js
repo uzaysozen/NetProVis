@@ -62,7 +62,7 @@ const ReportsPage = () => {
 
     return (
         <Content style={{backgroundColor: "#232323", color: "white"}}>
-            <Row gutter={24}>
+            <Row gutter={24} style={{marginTop: "20px"}}>
                 <Col span={4}></Col>
                 <Col span={12}>
                     <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%'}}>

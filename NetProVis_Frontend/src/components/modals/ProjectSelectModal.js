@@ -117,12 +117,12 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload, navbarReload}) => {
                 </Modal>
                 <Row>
                     <Col style={{marginTop: "10vh"}}>
-                        <Row className="settings-row">
+                        <Row className="project-row">
                             <Col>
-                                <Title level={1} className="settings-title"> You have not selected a project... </Title>
+                                <Title level={1} className="project-title"> You have not selected a project... </Title>
                             </Col>
                         </Row>
-                        <Row className="settings-row">
+                        <Row className="project-row">
                             <Col>
                                 <Button className="settings-project-btn" onClick={showModal}>Choose a Project</Button>
                             </Col>

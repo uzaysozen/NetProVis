@@ -24,7 +24,13 @@ const ThresholdStatsPage = () => {
     };
 
     useEffect(() => {
-        fetchPodsData();
+        fetchPodsData(); // initial fetch
+
+        const intervalId = setInterval(() => {
+            fetchPodsData();
+        }, 15000); // fetch data every 15 seconds
+
+        return () => clearInterval(intervalId); // clear interval on component unmount
     }, []);
 
     useEffect(() => {

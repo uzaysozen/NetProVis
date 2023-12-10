@@ -6,9 +6,8 @@ import Sider from 'antd/es/layout/Sider';
 import {
   faBars,
   faChartLine,
-  faCubes, faFilePdf,
+  faCubes, faDiagramProject, faFilePdf,
   faGauge,
-  faGear,
   faListCheck
 } from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -49,8 +48,8 @@ const Sidebar = () => {
         <Menu.Item key="/threshold" icon={<FontAwesomeIcon icon={faChartLine}/>}>
           <Link to="/threshold">Threshold Stats</Link>
         </Menu.Item>
-        <Menu.Item key="/settings" icon={<FontAwesomeIcon icon={faGear}/>}>
-          <Link to="/settings">Settings</Link>
+        <Menu.Item key="/project" icon={<FontAwesomeIcon icon={faDiagramProject}/>}>
+          <Link to="/project">Project</Link>
         </Menu.Item>
       </Menu>
     </Sider>

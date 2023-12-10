@@ -150,28 +150,20 @@ const WorkloadsPage = () => {
         setLoading(prev => ({...prev, [loadingKey]: false}));
     };
 
-    const fetchData = async () => {
+    useEffect(() => {
         setLoadingData(true);
-        try {
-            const response = await getPods();
-            setData(response.data);
-            setLoadingData(false);
-        } catch (error) {
-            console.log('Error:', error);
-        }
-        setLoadingData(false);
+        getPods()
+            .then(response => {
+                setData(response.data);
+                setLoadingData(false);
+            })
+            .catch(error => {
+                console.log('Error:', error);
+                setLoadingData(true);
+            });
+
         const storedState = localStorage.getItem('activatedState');
         if (storedState) setActivated(JSON.parse(storedState));
-    };
-
-    useEffect(() => {
-        fetchData(); // Fetch data initially
-
-        const interval = setInterval(() => {
-            fetchData(); // Fetch data every 10 seconds
-        }, 10000);
-
-        return () => clearInterval(interval); // Clear interval on component unmount
     }, []);
 
     useEffect(() => {

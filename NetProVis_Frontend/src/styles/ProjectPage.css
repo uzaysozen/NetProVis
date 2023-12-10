@@ -1,4 +1,4 @@
-.settings-container {
+.project-container {
     padding: 20px 15px 20px 15px;
     background-color: #444444;
     border: #888888 solid 2px;
@@ -10,32 +10,32 @@
     display: block;
 }
 
-.settings-row {
+.project-row {
     margin-bottom: 20px;
     align-items: center;
     justify-content: center;
 }
 
-.settings-span {
+.project-span {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.settings-content {
+.project-content {
     background-color: #232323;
     color: white;
     padding: 12px 125px;
     min-height: 280px;
 }
 
-.settings-icon {
+.project-icon {
     margin-right: 10px;
     margin-bottom: 5px;
     font-size: 40px;
 }
 
-.settings-title {
+.project-title {
     color: white !important;
     font-weight: bold;
     margin-top: 15px;

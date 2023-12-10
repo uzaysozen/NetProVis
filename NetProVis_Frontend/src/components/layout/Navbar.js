@@ -82,23 +82,24 @@ const Navbar = ({signOut}) => {
     );
 
     return (
-        <Header style={{backgroundColor: "#232323", height: "10%"}}>
+        <Header style={{backgroundColor: "#232323", height: "8%", position: "relative", borderBottom: "#888888 solid 1px"}}>
             <div style={{display: "flex", alignItems: "center", justifyContent: "space-between"}}>
                 <div style={{display: "flex", alignItems: "center"}}>
                     <img src={LogoImage} alt="Logo" width={50} height={50} style={{marginRight: "8px"}}/>
+                </div>
+                <div style={{display: "flex", alignItems: "center", justifyContent: "center", width: "700px"}}>
+                    <div style={{marginLeft: "180px", marginTop: "10px"}}>
+                        <Dropdown overlay={clusterMenu} trigger={["click"]}>
+                            <button
+                                className="cluster-btn"
+                                onClick={(e) => e.preventDefault()}>
+                                {clusterName} <DownOutlined style={{marginLeft: "4px", fontSize: "20px"}}/>
+                            </button>
+                        </Dropdown>
+                    </div>
 
-                    <Dropdown overlay={clusterMenu} trigger={["click"]}>
-                        <button
-                            className="cluster-btn"
-                            onClick={(e) => e.preventDefault()}>
-                            {clusterName} <DownOutlined style={{marginLeft: "4px", fontSize: "20px"}}/>
-                        </button>
-                    </Dropdown>
                 </div>
-                <div style={{display: "flex", alignItems: "center", width: "700px"}}>
-                    <SearchOutlined style={{color: "#aaaaaa", fontSize: "24px", marginRight: "8px"}}/>
-                    <Input id="custom-input" placeholder="Search..."/>
-                </div>
+
                 <div style={{display: "flex", alignItems: "center"}}>
                     <Button type="text" style={{color: "#ffffff", fontSize: "16px", marginRight: "10px"}}>
                         <BellFilled style={{fontSize: "20px"}}/>

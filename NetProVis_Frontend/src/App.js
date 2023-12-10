@@ -9,7 +9,7 @@ import MainLayout from "./components/layout/Layout";
 import TasksPage from "./components/pages/TasksPage";
 import ReportsPage from "./components/pages/ReportsPage";
 import ThresholdStatsPage from "./components/pages/ThresholdStatsPage";
-import SettingsPage from "./components/pages/SettingsPage";
+import ProjectPage from "./components/pages/ProjectPage";
 import LoadingScreen from "./components/screens/LoadingScreen";
 import NotFoundPage from "./components/screens/NotFoundPage";
 
@@ -78,7 +78,7 @@ function App() {
         <Route path="/tasks" element={loggedIn ? <MainLayout signOut={signOut} children={<TasksPage />} /> : <Navigate to="/" />} />
         <Route path="/reports" element={loggedIn ? <MainLayout signOut={signOut} children={<ReportsPage />} /> : <Navigate to="/" />} />
         <Route path="/threshold" element={loggedIn ? <MainLayout signOut={signOut} children={<ThresholdStatsPage />} /> : <Navigate to="/" />} />
-        <Route path="/settings" element={loggedIn ? <MainLayout signOut={signOut} children={<SettingsPage />} /> : <Navigate to="/" />} />
+        <Route path="/project" element={loggedIn ? <MainLayout signOut={signOut} children={<ProjectPage />} /> : <Navigate to="/" />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
