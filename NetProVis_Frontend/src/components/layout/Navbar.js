@@ -88,7 +88,7 @@ const Navbar = ({signOut}) => {
                     <img src={LogoImage} alt="Logo" width={50} height={50} style={{marginRight: "8px"}}/>
                 </div>
                 <div style={{display: "flex", alignItems: "center", justifyContent: "center", width: "700px"}}>
-                    <div style={{marginLeft: "180px", marginTop: "10px"}}>
+                    <div style={{marginLeft: "140px", marginTop: "10px"}}>
                         <Dropdown overlay={clusterMenu} trigger={["click"]}>
                             <button
                                 className="cluster-btn"
@@ -101,14 +101,9 @@ const Navbar = ({signOut}) => {
                 </div>
 
                 <div style={{display: "flex", alignItems: "center"}}>
-                    <Button type="text" style={{color: "#ffffff", fontSize: "16px", marginRight: "10px"}}>
-                        <BellFilled style={{fontSize: "20px"}}/>
-                    </Button>
                     <span style={{display: "block", fontSize: "14px", color: "#aaaaaa"}}>
                         {user.email}
                     </span>
-
-
                     <Dropdown overlay={userMenu} trigger={["click"]}>
                         <button
                             type="text"
