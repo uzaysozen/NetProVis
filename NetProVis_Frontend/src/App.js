@@ -8,8 +8,7 @@ import WorkloadsPage from "./components/pages/WorkloadsPage";
 import MainLayout from "./components/layout/Layout";
 import TasksPage from "./components/pages/TasksPage";
 import ReportsPage from "./components/pages/ReportsPage";
-import HistoryPage from "./components/pages/HistoryPage";
-import AlertsPage from "./components/pages/AlertsPage";
+import ThresholdStatsPage from "./components/pages/ThresholdStatsPage";
 import SettingsPage from "./components/pages/SettingsPage";
 import LoadingScreen from "./components/screens/LoadingScreen";
 import NotFoundPage from "./components/screens/NotFoundPage";
@@ -78,8 +77,7 @@ function App() {
         <Route path="/pods" element={loggedIn ? <MainLayout signOut={signOut} children={<WorkloadsPage />} /> : <Navigate to="/" />} />
         <Route path="/tasks" element={loggedIn ? <MainLayout signOut={signOut} children={<TasksPage />} /> : <Navigate to="/" />} />
         <Route path="/reports" element={loggedIn ? <MainLayout signOut={signOut} children={<ReportsPage />} /> : <Navigate to="/" />} />
-        <Route path="/history" element={loggedIn ? <MainLayout signOut={signOut} children={<HistoryPage />} /> : <Navigate to="/" />} />
-        <Route path="/alerts" element={loggedIn ? <MainLayout signOut={signOut} children={<AlertsPage />} /> : <Navigate to="/" />} />
+        <Route path="/threshold" element={loggedIn ? <MainLayout signOut={signOut} children={<ThresholdStatsPage />} /> : <Navigate to="/" />} />
         <Route path="/settings" element={loggedIn ? <MainLayout signOut={signOut} children={<SettingsPage />} /> : <Navigate to="/" />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

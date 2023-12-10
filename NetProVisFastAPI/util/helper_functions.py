@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import copy
 import httpx
 import json
@@ -15,6 +15,7 @@ project = {}
 cluster = {}
 pods = []
 tasks = []
+past_thresholds = {}
 
 
 async def make_request_for_time_series(project_id, query):
@@ -55,10 +56,13 @@ async def get_resource_time_series_data(project_id, query, resource_type):
         for point in series["pointData"]:
             timestamp = point["timeInterval"]["endTime"]
             res_usage = point["values"][0]["doubleValue"] * 100  # Convert to percentage
+            timestamp_str = timestamp.replace('Z', '+00:00')
+            timestamp_dt = datetime.fromisoformat(timestamp_str).strftime("%B %d, %Y, %I:%M:%S %p")
             result.append({
-                "timestamp": timestamp,
+                "timestamp": timestamp_dt,
                 f"{resource_type}_usage": res_usage
             })
+    print(result)
 
     return result
 
@@ -183,25 +187,45 @@ async def get_resource_request_utilization(project_id, cluster_name, cluster_zon
 
 
 async def adaptive_hpa(pod, resource_type, pod_project, pod_cluster):
-    project_id, cluster_name, cluster_zone = pod_project['projectId'], pod_cluster['name'], pod_cluster['zone']
+    try:
+        project_id, cluster_name, cluster_zone = pod_project['projectId'], pod_cluster['name'], pod_cluster['zone']
+        pod_name = pod['metadata']['name']
+        if not project_id or not cluster_name:
+            update_tasks(json.dumps({
+                "task": f"{pod_name}: An error occurred while Adaptive HPA for {resource_type.upper()} was activating.",
+                "date": get_current_date()
+            }))
+            raise HTTPException(status_code=500, detail="Could not find project id or cluster name")
 
-    if not project_id or not cluster_name:
-        raise HTTPException(status_code=500, detail="Could not find project id or cluster name")
+        resource_request_utilization = await get_resource_request_utilization(project_id, cluster_name, cluster_zone, pod,
+                                                                              resource_type)
 
-    resource_request_utilization = await get_resource_request_utilization(project_id, cluster_name, cluster_zone, pod,
-                                                                      resource_type)
+        threshold_value = await fetch_forecast_threshold(resource_request_utilization)
 
-    threshold_value = await fetch_forecast_threshold(resource_request_utilization)
+        cluster_endpoint = pod_cluster['privateClusterConfig']['publicEndpoint']
+        res = await create_hpa(cluster_endpoint,
+                               "cnf-namespace", pod['metadata']['name'], pod['kind'], threshold_value, resource_type)
+        # Add threshold setting log to the tasks
+        update_tasks(json.dumps({
+            "task": f"{pod_name}: HPA threshold for {resource_type.upper()} was set to {threshold_value}%",
+            "date": get_current_date()
+        }))
 
-    cluster_endpoint = pod_cluster['privateClusterConfig']['publicEndpoint']
-    res = await create_hpa(cluster_endpoint,
-                           "cnf-namespace", pod['metadata']['name'], pod['kind'], threshold_value, resource_type)
-    update_tasks(json.dumps({
-        "task": f"{pod['metadata']['name']}: HPA threshold for {resource_type.upper()} was set to {threshold_value}%",
-        "date": get_current_date()
-    }))
-    print("Finished setting HPA threshold! Success!")
-    return res
+        past_thresholds.setdefault(pod_name, {}).setdefault(resource_type, {}).setdefault("thresholdValues", []).append(
+            {get_current_date(): threshold_value})
+        past_thresholds.setdefault(pod_name, {}).setdefault(resource_type, {}).setdefault("values", []).append(
+            {get_current_date(): resource_request_utilization[0][resource_type + "_usage"]})
+        # Limit the size of past_thresholds dict
+        if len(past_thresholds[pod_name][resource_type]["thresholdValues"]) > 100:
+            past_thresholds[pod_name][resource_type]["thresholdValues"].pop(0)
+            past_thresholds[pod_name][resource_type]["values"].pop(0)
+
+        print("Finished setting HPA threshold! Success!")
+        return res
+    except Exception as e:
+        job_id = f"adaptive_hpa_job_for_{pod['metadata']['name']}_{resource_type}"
+        scheduler.remove_job(job_id)
+        print(f"Error in job {job_id}: {e}. Job has been removed.")
 
 
 def build_request_utilization_query(project_id, cluster_name, cluster_zone, pod, resource_type):
@@ -394,25 +418,6 @@ def run_command(command):
         return error_string
 
 
-async def deploy_with_helm(helm_repo_url, chart_name, image, cnf_name, params):
-    run_command(["helm", "repo", "add", image, helm_repo_url])
-    run_command(["helm", "repo", "update"])
-    res = run_command(["helm", "install", cnf_name, chart_name, "--set",
-                       f"resources.limits.cpu={params['cpuLimit']},"
-                       f"resources.limits.memory={params['memoryLimit']},"
-                       f"resources.requests.cpu={params['cpuRequested']},"
-                       f"resources.requests.memory={params['memoryRequested']}",
-                       "--namespace", "cnf-namespace"
-                       ])
-
-    # Fetch the external IP to access Kong (may need to wait a bit before the external IP is available)
-    # print("Waiting for the Kong Gateway to be assigned an external IP. This may take a few minutes...")
-    # kong_services = run_command(["kubectl", "get", "service", "-l", "app.kubernetes.io/name=kong", "-o", "jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'"])
-
-    # return f"Kong Gateway is accessible at: http://{kong_services.strip()}/"
-    return res
-
-
 def update_tasks(task):
     global tasks
     if len(tasks) > 100:
@@ -424,3 +429,89 @@ def update_tasks(task):
 
 def create_cnf_namespace():
     run_command(["kubectl", "apply", "-f", "./NetProVisFastAPI/configuration/namespace.yaml"])
+
+
+def build_network_stats_query(project_id, cluster, metric):
+    result = (f"fetch"
+              f" networking.googleapis.com/node_flow/{metric}|"
+              f" filter (resource.project_id == '{project_id}') && (resource.cluster_name == '{cluster}') |"
+              f" within(10m) |"
+              f" group_by [], [sum({metric})]")
+    return result
+
+
+async def get_network_stats_ingress_egress(project_id, cluster, metric, index):
+    query = build_network_stats_query(project_id, cluster, metric)
+    data = await make_request_for_time_series(project_id, query)
+    time_series_data = data['timeSeriesData']
+    first_point_data = time_series_data[0]['pointData']
+    first_values = first_point_data[index]['values']
+    if (metric == 'rtt'):
+        result = first_values[0]['doubleValue']
+    else:
+        result = first_values[0]['int64Value']
+    return int(result)
+
+
+def create_detailed_network_stats(metric, value, index):
+    date = datetime.now() - timedelta(minutes=index + 1)
+    if metric == 'rtt':
+        return {"Name": "networking.googleapis.com/node_flow/" + metric, "Value": value, "Unit": "ms",
+                "LastUpdated": date.strftime("%B %d, %Y, %I:%M:%S %p"), }
+    return {"Name": "networking.googleapis.com/node_flow/" + metric, "Value": value, "Unit": "B",
+            "LastUpdated": date.strftime("%B %d, %Y, %I:%M:%S %p"), }
+
+
+async def deploy_with_helm(helm_repo_url, chart_name, image, cnf_name, params):
+    # Add helm repo and update
+    run_command(["helm", "repo", "add", image, helm_repo_url])
+    run_command(["helm", "repo", "update"])
+
+    # Check if release already exists
+    existing_release = run_command(["helm", "list", "-q", "-n", "cnf-namespace", "--filter", f"^{cnf_name}$"])
+    if existing_release.strip():  # Assuming run_command returns output as a string and strips newline characters
+        run_command(["helm", "delete", cnf_name, "-n", "cnf-namespace"])
+
+    # If release does not exist, deploy it
+    res = run_command(["helm", "install", cnf_name, chart_name, "--set",
+                       f"resources.limits.cpu={params['cpuLimit']},"
+                       f"resources.limits.memory={params['memoryLimit']},"
+                       f"resources.requests.cpu={params['cpuRequested']},"
+                       f"resources.requests.memory={params['memoryRequested']}",
+                       "--namespace", "cnf-namespace"
+                       ])
+    return res
+
+
+async def request_deploy_cnf(cnf_name, params):
+    if not (cluster and project):
+        raise HTTPException(status_code=500, detail="Could not deploy!")
+
+    helm_chart_urls = {
+        'gateway': ("https://charts.konghq.com", "kong/kong", "kong"),
+        'firewall': ("https://ergon.github.io/airlock-helm-charts/", "airlock/microgateway", "airlock"),
+        'load-balancer': ("https://charts.bitnami.com/bitnami", "nginx/nginx", "nginx"),
+        'ids': ("https://falcosecurity.github.io/charts", "falco/falco", "falco"),  # Falco as IDS
+        'vpn': ("http://helm.devtron.ai/", "devtron/openvpn ", "devtron"),  # OpenVPN
+        'dns-server': ("https://coredns.github.io/helm", "coredns/coredns", "coredns"),  # CoreDNS
+        'message-broker': ("https://charts.bitnami.com/bitnami", "rabbitmq/rabbitmq", "rabbitmq"),  # RabbitMQ
+        'network-monitoring': (
+        "https://prometheus-community.github.io/helm-charts", "prometheus-community/prometheus", "prometheus-community")
+    }
+
+    if cnf_name in helm_chart_urls:
+        chart_url, chart, release_name = helm_chart_urls[cnf_name]
+        try:
+            res = await deploy_with_helm(chart_url, chart, release_name, cnf_name, params)
+            if res.startswith("Error"):
+                raise HTTPException(status_code=500, detail=res)
+            update_tasks(json.dumps({
+                "task": f"{cnf_name} deployed with parameters {params}.",
+                "date": get_current_date()
+            }))
+            return res
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    else:
+        raise HTTPException(status_code=400, detail=f"Invalid CNF name: {cnf_name}")

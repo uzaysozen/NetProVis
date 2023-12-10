@@ -1,9 +1,11 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Chart} from "react-google-charts";
 import {DownOutlined, LoadingOutlined} from "@ant-design/icons";
-import {Dropdown, Menu, Space, Spin} from "antd";
+import {Col, Dropdown, Menu, Row, Space, Spin} from "antd";
 import {getResRequestUtilization} from "../../../util/api";
 import '../../../styles/Chart.css';
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faChartArea} from "@fortawesome/free-solid-svg-icons";
 
 const BigResourceChart = ({reload, pods}) => {
 
@@ -11,7 +13,7 @@ const BigResourceChart = ({reload, pods}) => {
     let memoryData = []
     const [loading, setLoading] = useState(false)
     const [chartTitle, setChartTitle] = useState("")
-    const [data, setData] = useState([["Timestamp", "CPU Usage (%)", "Memory Usage (%)"], ["", 0, 0]])
+    const [data, setData] = useState([["Timestamp", "CPU Usage (%)", "Memory Usage (%)"]])
 
     const options = {
         title: chartTitle,
@@ -21,6 +23,7 @@ const BigResourceChart = ({reload, pods}) => {
             bold: true, // Make title bold
             italic: false, // Make title not italic
         },
+        colors: ['#00e5ff', '#ff00ff'],
         pointSize: 1,
         hAxis: {
             title: "Time",
@@ -41,7 +44,10 @@ const BigResourceChart = ({reload, pods}) => {
             textStyle: {
                 color: "white", // Set y-axis value text color to white
             },
-            gridlines: {color: "#636366"},
+            gridlines: {
+                color: "#636366",
+                count: 11
+            },
             minorGridlines: {color: "#636366"},
             baselineColor: "#909196",
         },
@@ -62,15 +68,12 @@ const BigResourceChart = ({reload, pods}) => {
         explorer: {keepInBounds: true, maxZoomIn: .1, maxZoomOut: 1}
     };
 
-    /*const data = [
-        ["Timestamp", "CPU Usage (%)", "Memory Usage (%)"],
-        ["2023-09-13 10:00:00", 30, 40],
-        ["2023-09-13 10:15:00", 40, 45],
-        ["2023-09-13 10:30:00", 35, 50],
-        ["2023-09-13 10:45:00", 45, 55],
-        ["2023-09-13 11:00:00", 50, 60],
-        ["2023-09-13 11:15:00", 55, 65],
-    ];*/
+    useEffect(() => {
+        if (pods.length > 0) {
+            handlePodMenuClick(pods[0]);
+        }
+    }, [pods]);
+
 
     const handlePodMenuClick = async (pod) => {
         setLoading(true);
@@ -82,7 +85,7 @@ const BigResourceChart = ({reload, pods}) => {
         }).catch((e) => console.log(e.message));
 
         let result = [["Timestamp", "CPU Usage (%)", "Memory Usage (%)"]]
-        for (let i = Math.min(cpuData.length, memoryData.length)-1; i >= 0; i--) {
+        for (let i = Math.min(cpuData.length, memoryData.length) - 1; i >= 0; i--) {
             result.push([cpuData[i].timestamp, cpuData[i].cpu_usage, memoryData[i].memory_usage])
         }
         setData(result);
@@ -101,31 +104,41 @@ const BigResourceChart = ({reload, pods}) => {
     );
 
     return (
-        (reload || loading) ? (
-            <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '4rem'}}>
-                <Spin indicator={<LoadingOutlined style={{fontSize: 40}} spin/>}/>
-            </div>
-        ) : (
-            <div style={{padding: "10px"}}>
-                <div style={{marginBottom: "15px", display: "flex", justifyContent: "end"}}>
-                    <Dropdown overlay={podMenu} trigger={["click"]}>
-                        <button id="chart-pod-dropdown-btn" onClick={(e) => e.preventDefault()}>
-                            <Space>
-                                Select a Pod
-                                <DownOutlined/>
-                            </Space>
-                        </button>
-                    </Dropdown>
+        <Col>
+            <Row align="middle" gutter={24}>
+                <Col className="gutter-row" span={20}>
+                    <FontAwesomeIcon icon={faChartArea} size="2x" style={{color: "#1890ff"}}/>
+                </Col>
+                <Col className="gutter-row" span={4}>
+                    <div style={{marginBottom: "12px", display: "flex", justifyContent: "end"}}>
+                        <Dropdown overlay={podMenu} trigger={["click"]}>
+                            <button id="chart-pod-dropdown-btn" onClick={(e) => e.preventDefault()}>
+                                <Space>
+                                    Select a Pod
+                                    <DownOutlined/>
+                                </Space>
+                            </button>
+                        </Dropdown>
+                    </div>
+                </Col>
+            </Row>
+            {(reload || loading) ? (
+                <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '4rem'}}>
+                    <Spin indicator={<LoadingOutlined style={{fontSize: 40}} spin/>}/>
                 </div>
-                <Chart
-                    chartType="LineChart"
-                    data={data}
-                    options={options}
-                    width="100%"
-                    height="400px"
+            ) : (
+                <div style={{padding: "10px"}}>
+                    <Chart
+                        chartType="LineChart"
+                        data={data}
+                        options={options}
+                        width="100%"
+                        height="400px"
                 />
             </div>
-        )
+            )}
+        </Col>
+
 
     );
 };

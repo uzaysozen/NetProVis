@@ -1,13 +1,33 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {Col, ConfigProvider, Row, Statistic, Typography, Spin, Card} from "antd";
 import {LoadingOutlined} from "@ant-design/icons";
 import {faWifi} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import axios from "axios";
+import {getNetworkStats, getTasks} from "../../../util/api";
 
 const {Title} = Typography;
 
 const NetworkStatsContainer = ({reload}) => {
-    // const [loading, setLoading] = useState(false);
+    const [networkStats, setNetworkStats] = useState([])
+    const [loading, setLoading] = useState(false);
+
+    const fetchData = () => {
+        setLoading(true);
+        getNetworkStats()
+            .then(response => {
+                setNetworkStats(response.data);
+                setLoading(false);
+            })
+            .catch(error => {
+                console.log('Error:', error);
+                setLoading(true);
+            });
+    };
+
+    useEffect(() => {
+        fetchData()
+    }, [reload]);
 
     const renderStats = () => {
         if (reload) {
@@ -19,19 +39,19 @@ const NetworkStatsContainer = ({reload}) => {
         }
 
         // Replace these dummy values with your actual network stats data
-        const throughput = 89; // Replace with actual value
-        const packetLoss = 3.17; // Replace with actual value
-        const bytesReceived = 120456789; // Replace with actual value
-        const bytesTransmitted = 98765432; // Replace with actual value
-        const latency = 10; // Replace with actual value (in milliseconds)
-        const jitter = 2; // Replace with actual value (in milliseconds)
+        const egressBytes = networkStats[0];
+        const egressPackets = networkStats[1];
+        const ingressBytes = networkStats[2];
+        const ingressPackets = networkStats[3];
+        const rtt = networkStats[4];
 
         const cardStyle = {
             marginTop: "1.65vh",
             backgroundColor: "#444444",
             border: "#777777 solid 1px",
             borderRadius: "5px",
-            color: "#ffffff", // Text color
+            color: "#ffffff",// Text color
+            textAlign: "center"
         };
 
         const statisticStyle = {
@@ -42,33 +62,29 @@ const NetworkStatsContainer = ({reload}) => {
             <Row gutter={24}>
                 <Col span={12}>
                     <Card style={cardStyle}>
-                        <Statistic title="Throughput" value={throughput} suffix="Mbps" valueStyle={statisticStyle}/>
+                        <Statistic title="Egress Bytes Count" value={egressBytes} suffix="B" valueStyle={statisticStyle}/>
                     </Card>
                 </Col>
                 <Col span={12}>
                     <Card style={cardStyle}>
-                        <Statistic title="Packet Loss" value={packetLoss} suffix="%" valueStyle={statisticStyle}/>
+                        <Statistic title="Egress Packets Count" value={egressPackets} valueStyle={statisticStyle}/>
                     </Card>
                 </Col>
-                <Col span={12}>
+                <Col span={24}>
                     <Card style={cardStyle}>
-                        <Statistic title="Bytes Received" value={bytesReceived} suffix="B" valueStyle={statisticStyle}/>
-                    </Card>
-                </Col>
-                <Col span={12}>
-                    <Card style={cardStyle}>
-                        <Statistic title="Bytes Transmitted" value={bytesTransmitted} suffix="B"
+                        <Statistic title="RTT" value={rtt} suffix="ms"
                                    valueStyle={statisticStyle}/>
                     </Card>
                 </Col>
                 <Col span={12}>
                     <Card style={cardStyle}>
-                        <Statistic title="Latency" value={latency} suffix="ms" valueStyle={statisticStyle}/>
+                        <Statistic title="Ingress Bytes Count" value={ingressBytes} suffix="B" valueStyle={statisticStyle}/>
                     </Card>
                 </Col>
                 <Col span={12}>
                     <Card style={cardStyle}>
-                        <Statistic title="Jitter" value={jitter} suffix="ms" valueStyle={statisticStyle}/>
+                        <Statistic title="Ingress Packets Count" value={ingressPackets}
+                                   valueStyle={statisticStyle}/>
                     </Card>
                 </Col>
             </Row>
@@ -97,7 +113,11 @@ const NetworkStatsContainer = ({reload}) => {
                     },
                 }}
             >
-                {renderStats()}
+                {loading ? (
+                        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '4rem'}}>
+                            <Spin indicator={<LoadingOutlined style={{fontSize: 40}} spin/>}/>
+                        </div>
+                    ) : (renderStats())}
             </ConfigProvider>
         </Col>
     );

@@ -3,7 +3,9 @@ import '../../styles/DashboardPage.css';
 import {Content} from "antd/es/layout/layout";
 import {getTasks} from "../../util/api";
 import {Col, ConfigProvider, List, Row, Typography} from "antd";
-import {CalendarFilled, LoadingOutlined} from "@ant-design/icons";
+import {LoadingOutlined} from "@ant-design/icons";
+import {faListCheck} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
 const {Title} = Typography;
 
@@ -26,7 +28,13 @@ const TasksPage = () => {
     };
 
     useEffect(() => {
-        fetchData()
+        fetchData(); // initial fetch
+
+        const intervalId = setInterval(() => {
+            fetchData();
+        }, 15000); // fetch data every 15 seconds
+
+        return () => clearInterval(intervalId); // clear interval on component unmount
     }, []);
 
     return (
@@ -36,7 +44,7 @@ const TasksPage = () => {
                 <Col className="dashboard-container" span={18}>
                     <Row style={{display: "flex", justifyContent: "center"}}>
                         <Col style={{marginRight: "15px", marginBottom: "15px"}}>
-                            <CalendarFilled style={{fontSize: "30px", color: "#ffffff"}}/>
+                            <FontAwesomeIcon icon={faListCheck} style={{fontSize: "30px", color: "#ffffff"}}/>
                         </Col>
                         <Col>
                             <Title level={3} className="dashboard-title">

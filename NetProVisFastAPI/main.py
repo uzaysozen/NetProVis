@@ -186,22 +186,22 @@ async def get_cluster_memory():
         return 0
 
 
-@app.get("/get_pods")
-def get_pods():
+@app.get("/get_resources")
+def get_resources():
     if helper_functions.cluster:
-        # Execute the kubectl command to get the services
-        kubectl_command = ["kubectl", "get", "deployments", "--output=json", "--namespace=cnf-namespace"]
-        try:
-            stdout = run_command(kubectl_command)
-            # Parse the output as JSON
-            pods_data = json.loads(stdout)
-            # Extract the list of services from the parsed JSON
-            pods_list = pods_data.get("items", [])
-            helper_functions.pods = pods_list
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=e)
+        resources = ["deployments", "statefulsets", "daemonsets"]
+        all_resources = []
 
-        return pods_list
+        for resource in resources:
+            kubectl_command = ["kubectl", "get", resource, "--output=json", "--namespace=cnf-namespace"]
+            try:
+                stdout = run_command(kubectl_command)
+                resource_data = json.loads(stdout)
+                all_resources.extend(resource_data.get("items", []))
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Error fetching {resource}: {str(e)}")
+        print(all_resources)
+        return all_resources
     else:
         return []
 
@@ -222,9 +222,14 @@ async def activate_hpa(p: Pod):
                                                'interval', minutes=1,
                                                args=[pod, resource, helper_functions.project, helper_functions.cluster],
                                                id=job_id)
+            update_tasks(json.dumps({
+                "task": f"{pod['metadata']['name']}: Adaptive HPA for {resource_type.upper()} was activated.",
+                "date": get_current_date()
+            }))
             await adaptive_hpa(pod, resource, helper_functions.project, helper_functions.cluster)
 
     print(f"Scheduler activated for pod {pod['metadata']['name']} for {resource_type} resources")
+
     return {"status": f"Scheduler activated for pod {pod['metadata']['name']} for {resource_type} resources"}
 
 
@@ -236,6 +241,10 @@ async def stop_hpa(p: Pod):
     namespace = pod['metadata']['namespace']
     hpa_endpoint = get_hpa_endpoint(namespace, pod_name)
     headers = get_headers(helper_functions.access_token)
+    update_tasks(json.dumps({
+        "task": f"{pod['metadata']['name']}: Adaptive HPA for {resource_type.upper()} was deactivated.",
+        "date": get_current_date()
+    }))
 
     if resource_type == "all":
         return await handle_all_resources_stop(hpa_endpoint, pod_name, headers)
@@ -245,7 +254,7 @@ async def stop_hpa(p: Pod):
 
 @app.post("/deploy_cnf")
 async def deploy_cnf(c: CNF):
-    cnf_name = c.cnf.lower().replace(" ", "")
+    cnf_name = c.cnf.lower().replace(" ", "-")
     limit_params = json.loads(c.params)
     print(limit_params)
     # file_path = os.path.join("NetProVisFastAPI", "deployments", f"{cnf_name}-deployment.yml")
@@ -253,33 +262,18 @@ async def deploy_cnf(c: CNF):
     # if not os.path.exists(file_path):
     # raise HTTPException(status_code=404, detail=f"Deployment file not found: {file_path}")
 
-    if helper_functions.cluster and helper_functions.project:
-        if cnf_name == 'gateway':
-            try:
-                res = await deploy_with_helm("https://charts.konghq.com", "kong/kong", "kong", cnf_name, limit_params)
-
-                if res[:5] == "Error":
-                    raise HTTPException(status_code=500, detail=res)
-                return res
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=e)
-        elif cnf_name == 'firewall':
-            try:
-                res = await deploy_with_helm("https://ergon.github.io/airlock-helm-charts/", "airlock/microgateway",
-                                             "airlock", cnf_name, limit_params)
-                if res[:5] == "Error":
-                    raise HTTPException(status_code=500, detail=res)
-                return res
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=e)
-
-    else:
-        raise HTTPException(status_code=500, detail="Could not deploy!")
+    await request_deploy_cnf(cnf_name ,limit_params)
 
 
 @app.get("/get_tasks")
 def get_tasks():
     return helper_functions.tasks
+
+
+@app.get("/get_past_thresholds")
+def get_past_thresholds():
+    print(helper_functions.past_thresholds)
+    return helper_functions.past_thresholds
 
 
 @app.post("/get_resource_request_utilization")
@@ -292,9 +286,61 @@ async def get_resource_request_utilization(p: Pod):
         cluster_zone = helper_functions.cluster['zone']
         try:
             res = await helper_functions.get_resource_request_utilization(project_id, cluster_name, cluster_zone, pod,
-                                                                        resource_type)
+                                                                          resource_type)
             return res
         except Exception as e:
             raise HTTPException(status_code=500, detail=e)
     else:
         raise HTTPException(status_code=500, detail="Could not get resource request utilization!")
+
+
+@app.get("/get_node_network_stats")
+async def get_node_network_stats():
+    if helper_functions.project and helper_functions.cluster:
+        project_id = helper_functions.project['projectId']
+        cluster_name = helper_functions.cluster['name']
+        if project_id and cluster_name:
+            egress_bytes_count = await get_network_stats_ingress_egress(project_id, cluster_name, "egress_bytes_count",
+                                                                        1)
+            egress_packets_count = await get_network_stats_ingress_egress(project_id, cluster_name,
+                                                                          "egress_packets_count", 1)
+            ingress_bytes_count = await get_network_stats_ingress_egress(project_id, cluster_name,
+                                                                         "ingress_bytes_count", 1)
+            ingress_packets_count = await get_network_stats_ingress_egress(project_id, cluster_name,
+                                                                           "ingress_packets_count", 1)
+            round_trip_time = await get_network_stats_ingress_egress(project_id, cluster_name, "rtt", 1)
+            return (
+            egress_bytes_count, egress_packets_count, ingress_bytes_count, ingress_packets_count, round_trip_time)
+        else:
+            raise HTTPException(status_code=500, detail="Could not find project id or cluster name")
+    else:
+        return 0
+
+
+@app.get("/get_node_network_stats_table")
+async def get_node_network_stats_table():
+    if helper_functions.project and helper_functions.cluster:
+        project_id = helper_functions.project['projectId']
+        cluster_name = helper_functions.cluster['name']
+        result = []
+        if project_id and cluster_name:
+            for i in range(1, 6):
+                egress_bytes_count = await get_network_stats_ingress_egress(project_id, cluster_name,
+                                                                            "egress_bytes_count", i)
+                egress_packets_count = await get_network_stats_ingress_egress(project_id, cluster_name,
+                                                                              "egress_packets_count", i)
+                ingress_bytes_count = await get_network_stats_ingress_egress(project_id, cluster_name,
+                                                                             "ingress_bytes_count", i)
+                ingress_packets_count = await get_network_stats_ingress_egress(project_id, cluster_name,
+                                                                               "ingress_packets_count", i)
+                round_trip_time = await get_network_stats_ingress_egress(project_id, cluster_name, "rtt", i)
+                result.extend([create_detailed_network_stats("egress_bytes_count", egress_bytes_count, i),
+                               create_detailed_network_stats("egress_packets_count", egress_packets_count, i),
+                               create_detailed_network_stats("ingress_bytes_count ", ingress_bytes_count, i),
+                               create_detailed_network_stats("ingress_packets_count", ingress_packets_count, i),
+                               create_detailed_network_stats("rtt", round_trip_time, i)])
+            return result
+        else:
+            raise HTTPException(status_code=500, detail="Could not find project id or cluster name")
+    else:
+        return 0

@@ -1,13 +1,48 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import { Col, ConfigProvider, Row, Spin, Table, Tag, Typography } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGaugeMed } from "@fortawesome/free-solid-svg-icons";
 import { LoadingOutlined } from "@ant-design/icons";
 import '../../../styles/Table.css'
+import {getNetworkStatsTable} from "../../../util/api";
 
 const { Title } = Typography;
 
 const ResourceValuesTable = ({ reload }) => {
+    const [networkStatsTable, setNetworkStatsTable] = useState([])
+    const [loading, setLoading] = useState(false);
+
+    const fetchData = () => {
+        setLoading(true);
+        getNetworkStatsTable()
+            .then(response => {
+                setNetworkStatsTable(populateTable(response.data));
+                setLoading(false);
+            })
+            .catch(error => {
+                console.log('Error:', error);
+                setLoading(true);
+            });
+    };
+
+    useEffect(() => {
+        fetchData()
+    }, [reload]);
+
+    const populateTable = (table) => {
+        var data = []
+        for (var i = 1; i <= table.length; i++) {
+            data.push({
+                key: i.toString(),
+                name: table[i-1]["Name"],
+                value: table[i-1]["Value"],
+                unit: table[i-1]["Unit"],
+                last_updated: table[i-1]["LastUpdated"],
+            })
+        }
+        return data
+    }
+
     const columns = [
         {
             title: 'Name',
@@ -28,76 +63,6 @@ const ResourceValuesTable = ({ reload }) => {
             title: 'Last Updated',
             dataIndex: 'last_updated',
             key: 'last_updated',
-        },
-        {
-            title: 'Status',
-            key: 'status',
-            dataIndex: 'status',
-            render: (_, { statuses }) => (
-                <>
-                    {statuses.map((status) => {
-                        let color = status.length > 5 ? 'green' : 'geekblue';
-                        if (status === 'critical') {
-                            color = 'volcano';
-                        }
-                        return (
-                            <Tag color={color} key={status}>
-                                {status.toUpperCase()}
-                            </Tag>
-                        );
-                    })}
-                </>
-            ),
-        },
-    ];
-    const data = [
-        {
-            key: '1',
-            name: 'node_network_transmit_bytes ',
-            value: 98765432,
-            unit: 'B',
-            last_updated: '19 May, 2021 : 10:10 AM',
-            statuses: ['healthy']
-        },
-        {
-            key: '2',
-            name: 'node_network_receive_bytes ',
-            value: 120456789,
-            unit: 'B',
-            last_updated: '19 May, 2021 : 10:10 AM',
-            statuses: ['healthy']
-        },
-        {
-            key: '3',
-            name: 'node_network_latency_milliseconds',
-            value: 30,
-            unit: 'ms',
-            last_updated: '19 May, 2021 : 10:10 AM',
-            statuses: ['critical'],
-        },
-        {
-            key: '4',
-            name: 'node_network_transmit_bytes ',
-            value: 98765432,
-            unit: 'B',
-            last_updated: '19 May, 2021 : 10:10 AM',
-            statuses: ['healthy']
-        },
-        {
-            key: '5',
-            name: 'node_network_receive_bytes ',
-            value: 120456789,
-            unit: 'B',
-            last_updated: '19 May, 2021 : 10:10 AM',
-            statuses: ['healthy']
-        },
-        {
-            key: '6',
-            name: 'node_network_latency_milliseconds',
-            value: 30,
-            unit: 'ms',
-            last_updated: '19 May, 2021 : 10:10 AM',
-            statuses: ['critical'],
         },
     ];
     return reload ? (
@@ -131,11 +96,16 @@ const ResourceValuesTable = ({ reload }) => {
                         }
                     },
                 }}>
+                {loading ? (
+                        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '4rem'}}>
+                            <Spin indicator={<LoadingOutlined style={{fontSize: 40}} spin/>}/>
+                        </div>
+                    ) : (
                 <Table
                     columns={columns}
-                    dataSource={data}
+                    dataSource={networkStatsTable}
                     pagination={{ pageSize: 5 }} // Set pagination item limit to 5
-                />
+                />)}
             </ConfigProvider>
         </Col>
     );

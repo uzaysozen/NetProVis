@@ -10,7 +10,7 @@ import {
     faLock,
     faCloud,
     faGlobe,
-    faEnvelope
+    faEnvelope, faDisplay
 } from '@fortawesome/free-solid-svg-icons';
 import {LoadingOutlined} from "@ant-design/icons";
 
@@ -32,7 +32,7 @@ const CNFModal = ({isVisible, onClose}) => {
         {name: 'Load Balancer', icon: faNetworkWired},
         {name: 'IDS', icon: faVirusCovid},
         {name: 'VPN', icon: faLock},
-        {name: 'CDN', icon: faCloud},
+        {name: 'Network Monitoring', icon: faDisplay},
         {name: 'DNS Server', icon: faGlobe},
         {name: 'Message Broker', icon: faEnvelope}
     ];

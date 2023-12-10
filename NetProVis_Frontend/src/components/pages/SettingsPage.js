@@ -2,9 +2,10 @@ import React from 'react';
 import '../../styles/SettingsPage.css';
 import { Content } from "antd/es/layout/layout";
 import { Col, Row, Switch } from "antd";
-import { SettingFilled } from "@ant-design/icons";
 import { Typography } from 'antd';
 import ProjectSelectModal from "../modals/ProjectSelectModal";
+import {faGear} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
 const {Title, Text} = Typography;
 
@@ -18,7 +19,7 @@ const SettingsPage = () => {
                     <Row className="settings-row">
                         <Col>
                             <span className="settings-span">
-                                <SettingFilled className="settings-icon"/>
+                                <FontAwesomeIcon className="settings-icon" icon={faGear}/>
                                 <Title level={1} className="settings-title">Settings</Title>
                             </span>
                         </Col>
