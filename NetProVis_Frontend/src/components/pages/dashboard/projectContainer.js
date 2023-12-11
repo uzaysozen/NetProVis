@@ -1,50 +1,56 @@
 import React from 'react';
-import {Col, Row, Typography} from "antd";
-import {FolderOpenFilled} from "@ant-design/icons";
+import { Col, Row, Typography, Badge } from "antd";
+import { FolderOpenFilled } from "@ant-design/icons";
 
-const {Title, Text} = Typography;
+const { Title, Text } = Typography;
 
-
-const ProjectContainer = ({storedProjectID, storedProjectNumber, storedProjectState}) => {
+const ProjectContainer = ({ storedProjectName, storedProjectID, storedProjectState }) => {
     const stateColors = {
         ACTIVE: '#09db41',
         DELETE_REQUESTED: '#ed1607',
         DELETE_IN_PROGRESS: '#fa6102',
-        LIFECYCLE_STATE_UNSPECIFIED: '#ffffff',
+        LIFECYCLE_STATE_UNSPECIFIED: '#000000', // Set an appropriate color for unspecified state
     };
     const stateColor = stateColors[storedProjectState];
 
     return (
         <Col>
-            <Row>
-                <span>
+            <Row align="middle" gutter={8}>
+                <Col style={{marginRight: "10px", marginBottom: "15px"}}>
+                    <FolderOpenFilled style={{ fontSize: "30px", color: "#1890ff" }} />
+                </Col>
+                <Col>
                     <Title level={3} className="dashboard-title">
                         Project
-                        <FolderOpenFilled style={{marginLeft: "18vh", fontSize: "30px"}}/>
                     </Title>
-                </span>
+                </Col>
             </Row>
-            <Row>
-                <span>
-                    <Text className="dashboard-label">Project ID: </Text>
-                    <Text className="dashboard-text" style={{marginLeft:"6vh"}}>{storedProjectID}</Text>
-                </span>
+            <Row gutter={16}>
+                <Col span={12}>
+                    <Text className="dashboard-label">Project Name:</Text>
+                </Col>
+                <Col span={12}>
+                    <Text className="dashboard-text">{storedProjectName}</Text>
+                </Col>
             </Row>
-            <Row>
-                <span>
-                    <Text className="dashboard-label">Project Number: </Text>
-                    <Text className="dashboard-text">{storedProjectNumber}</Text>
-                </span>
+            <Row gutter={16}>
+                <Col span={12}>
+                    <Text className="dashboard-label">Project ID:</Text>
+                </Col>
+                <Col span={12}>
+                    <Text className="dashboard-text">{storedProjectID}</Text>
+                </Col>
             </Row>
-            <Row>
-                <span>
-                    <Text className="dashboard-label">Project State: </Text>
-                    <Text className="dashboard-text"
-                          style={{color: stateColor, marginLeft:"3vh"}}>{storedProjectState}</Text>
-                </span>
+            <Row gutter={16}>
+                <Col span={12}>
+                    <Text className="dashboard-label">Project State:</Text>
+                </Col>
+                <Col span={12}>
+                    <Badge color={stateColor} text={storedProjectState} style={{color: stateColor}} />
+                </Col>
             </Row>
         </Col>
     );
-}
+};
 
 export default ProjectContainer;

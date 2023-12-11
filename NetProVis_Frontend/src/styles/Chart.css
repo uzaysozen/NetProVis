@@ -1,0 +1,33 @@
+#chart-pod-dropdown-btn {
+  font-size: 16px;
+  color: #1677ff;
+  text-decoration: none;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+#chart-pod-dropdown-btn:hover {
+  color: #69b1ff;
+}
+
+#chart-pod-dropdown-btn:active {
+  color: #0958d9;
+}
+
+#chart-pod-dropdown-btn:active,
+#chart-pod-dropdown-btn:hover {
+  text-decoration: none;
+  outline: 0;
+}
+
+#chart-pod-dropdown-btn:focus {
+  text-decoration: none;
+  outline: 0;
+}
+
+#chart-pod-dropdown-btn[disabled] {
+  color: rgba(0, 0, 0, 0.25);
+  cursor: not-allowed;
+}

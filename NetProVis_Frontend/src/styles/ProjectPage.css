@@ -1,40 +1,41 @@
-.settings-container {
-    padding: 25px;
+.project-container {
+    padding: 20px 15px 20px 15px;
     background-color: #444444;
-    color: white;
-    height: 55vh;
-    border-radius: 25px;
-    margin-top: 10vh;
-    justify-content: center;
-    border: #888888 solid 1px;
+    border: #888888 solid 2px;
     box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 5px;
+    margin-top: 2.5vh;
+    justify-content: center;
+    display: block;
 }
 
-.settings-row {
+.project-row {
     margin-bottom: 20px;
     align-items: center;
     justify-content: center;
 }
 
-.settings-span {
+.project-span {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.settings-content {
+.project-content {
     background-color: #232323;
     color: white;
     padding: 12px 125px;
     min-height: 280px;
 }
 
-.settings-icon {
-    margin-right: 8px;
+.project-icon {
+    margin-right: 10px;
+    margin-bottom: 5px;
     font-size: 40px;
 }
 
-.settings-title {
+.project-title {
     color: white !important;
     font-weight: bold;
     margin-top: 15px;

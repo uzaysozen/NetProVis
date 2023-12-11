@@ -1,56 +1,43 @@
 import React, {useEffect, useState} from 'react';
-import {CalendarFilled, CodeSandboxSquareFilled} from "@ant-design/icons";
-import {Badge, Col, ConfigProvider, Divider, List, Row, Skeleton, Typography} from "antd";
+import {CalendarFilled, LoadingOutlined} from "@ant-design/icons";
+import {Col, ConfigProvider, List, Row, Spin, Typography} from "antd";
+import {getTasks} from "../../../util/api";
 
 const {Title} = Typography;
 
 
-const TasksContainer = () => {
-    const data = [
-        {
-            title: 'Ant Design Title 1',
-        },
-        {
-            title: 'Ant Design Title 2',
-        },
-        {
-            title: 'Ant Design Title 3',
-        },
-        {
-            title: 'Ant Design Title 4',
-        },
-        {
-            title: 'Ant Design Title 5',
-        },
-        {
-            title: 'Ant Design Title 6',
-        },
-        {
-            title: 'Ant Design Title 7',
-        },
-        {
-            title: 'Ant Design Title 8',
-        },
-        {
-            title: 'Ant Design Title 9',
-        },
-        {
-            title: 'Ant Design Title 10',
-        },
-        {
-            title: 'Ant Design Title 11',
-        },
-    ];
+const TasksContainer = ({reload}) => {
+    const [tasks, setTasks] = useState([])
+    const [loading, setLoading] = useState(false)
+
+    const fetchData = () => {
+        setLoading(true);
+        getTasks()
+            .then(response => {
+                setTasks(response.data.reverse());
+                setLoading(false);
+            })
+            .catch(error => {
+                console.log('Error:', error);
+                setLoading(true);
+            });
+    };
+
+    useEffect(() => {
+        fetchData()
+    }, [reload]);
 
     return (
         <Col>
-            <Row>
-                <span>
+            <Row align="middle" gutter={8}>
+                <Col style={{marginRight: "10px", marginBottom: "15px"}}>
+                    <CalendarFilled style={{fontSize: "30px", color: "#1890ff"}}/>
+                </Col>
+                <Col>
                     <Title level={3} className="dashboard-title">
                         Tasks
-                        <CalendarFilled style={{marginLeft: "22vh", fontSize: "30px"}}/>
                     </Title>
-                </span>
+                </Col>
             </Row>
             <Row>
                 <div style={{
@@ -64,26 +51,31 @@ const TasksContainer = () => {
                             components: {
                                 List: {
                                     colorTextDescription: '#ffffff',
+                                    colorText: '#ffffff',
+                                    colorSplit: 'rgba(140, 140, 140, 0.35)'
                                 },
                             },
                         }}
-                    >
+                    > {loading ? (
+                        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '4rem'}}>
+                            <Spin indicator={<LoadingOutlined style={{fontSize: 40}} spin/>}/>
+                        </div>
+                    ) : (
                         <List
                             itemLayout="horizontal"
-                            dataSource={data}
+                            dataSource={tasks}
                             renderItem={(item, index) => (
                                 <List.Item style={{padding: 0, marginLeft: "5px"}}>
                                     <List.Item.Meta
-                                        description={item.title}
+                                        title={JSON.parse(item).date}
+                                        description={JSON.parse(item).task}
                                     />
                                 </List.Item>
                             )}
-                        />
+                        />)}
                     </ConfigProvider>
-
                 </div>
             </Row>
-
         </Col>
     );
 }

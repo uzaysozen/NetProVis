@@ -1,44 +1,43 @@
+/* LoginPage.css */
+
 .login-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background: linear-gradient(to bottom, #000000, #292929);
-  color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: linear-gradient(to bottom, #000000, #292929);
+    color: #ffffff;
 }
 
 .login-card {
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: #ffffff;
-  width: 80vh;
-  background-color: #444444;
-  border: 3px solid white;
-  border-radius: 25px;
-  padding: 20px;
-  box-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #ffffff;
+    width: 500px; /* Increase the width to your preference */
+    background-color: #444444;
+    border: #888888 solid 2px;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+    padding: 20px;
 }
 
 .logo-image {
-  position: absolute;
-  bottom: 75%;
-  left: 38%;
+    margin-bottom: 20px; /* Adjust the margin to your preference */
 }
 
 .button-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
 }
 
 .login-title {
-  font-size: 54px;
-  font-weight: bold;
-  margin-bottom: 20px;
+    font-size: 36px; /* Increase the font size to your preference */
+    font-weight: bold;
 }
 
 .login-subtitle {
-  font-size: 20px;
+    font-size: 20px; /* Increase the font size to your preference */
 }

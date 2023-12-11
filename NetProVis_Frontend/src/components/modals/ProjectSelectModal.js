@@ -5,11 +5,10 @@ import {Typography} from 'antd';
 
 const {Title, Text} = Typography;
 
-const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
+const ProjectSelectModal = ({isDashboard, onDashboardReload, navbarReload}) => {
     const [projects, setProjects] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProject, setSelectedProject] = useState('');
-    const [reloadComponent, setReloadComponent] = useState(false);
 
     const showModal = () => {
         setIsModalOpen(true);
@@ -21,7 +20,20 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
         if (isDashboard) {
             onDashboardReload(true)
         }
-        setReloadComponent(!reloadComponent);
+        if (selectedProject) {
+            localStorage.removeItem("clusterName");
+            axios
+            .post('http://localhost:8000/set_project', {selected_project: selectedProject})
+            .then(response => {
+                console.log(response)
+                console.log("Removing 'clusterName'")
+            })
+            .catch(error => {
+                console.log('Error:', error);
+            });
+
+        }
+        window.location.reload()
     };
 
     const handleCancel = () => {
@@ -93,7 +105,7 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
             .catch(error => {
                 console.log('Error:', error);
             });
-    }, [reloadComponent]);
+    }, []);
 
     if (isDashboard) {
         return (
@@ -105,12 +117,12 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
                 </Modal>
                 <Row>
                     <Col style={{marginTop: "10vh"}}>
-                        <Row className="settings-row">
+                        <Row className="project-row">
                             <Col>
-                                <Title level={1} className="settings-title"> You have not selected a project... </Title>
+                                <Title level={1} className="project-title"> You have not selected a project... </Title>
                             </Col>
                         </Row>
-                        <Row className="settings-row">
+                        <Row className="project-row">
                             <Col>
                                 <Button className="settings-project-btn" onClick={showModal}>Choose a Project</Button>
                             </Col>
@@ -120,7 +132,6 @@ const ProjectSelectModal = ({isDashboard, onDashboardReload}) => {
             </>
         );
     } else {
-        console.log('Project:', selectedProject);
         return (
             <>
                 <Title level={3} className="settings-subtitle">Current Project: </Title>
