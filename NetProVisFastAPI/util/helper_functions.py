@@ -251,7 +251,7 @@ def build_request_utilization_query(project_id, cluster_name, cluster_zone, pod,
     # Add the rest of the query
     query += f" | group_by 1m, [value_request_utilization_mean: mean(value.request_utilization)] | every 1m | " \
              f"group_by [metadata.system_labels.top_level_controller_name], " \
-             f"[value_request_utilization_mean_percentile: percentile(value_request_utilization_mean, 50)] | within(2h)"
+             f"[value_request_utilization_mean_aggregate: aggregate(value_request_utilization_mean)] | within(2h)"
 
     print(query)
     return query
@@ -477,15 +477,24 @@ async def deploy_with_helm(helm_repo_url, chart_name, image, cnf_name, params):
     if existing_release.strip():  # Assuming run_command returns output as a string and strips newline characters
         run_command(["helm", "delete", cnf_name, "-n", "cnf-namespace"])
 
-    # If release does not exist, deploy it
-    res = run_command(["helm", "install", cnf_name, chart_name, "--set",
-                       f"resources.limits.cpu={params['cpuLimit']},"
-                       f"resources.limits.memory={params['memoryLimit']},"
-                       f"resources.requests.cpu={params['cpuRequested']},"
-                       f"resources.requests.memory={params['memoryRequested']}",
-                       "--namespace", "cnf-namespace"
-                       ])
+    # Prepare helm install command
+    helm_install_cmd = ["helm", "install", cnf_name, chart_name, "--set",
+                        f"resources.limits.cpu={params['cpuLimit']},"
+                        f"resources.limits.memory={params['memoryLimit']},"
+                        f"resources.requests.cpu={params['cpuRequested']},"
+                        f"resources.requests.memory={params['memoryRequested']}",
+                        "--namespace", "cnf-namespace"]
+
+    # Disable Persistent Volume Claim for VPN
+    if cnf_name == "vpn":
+        helm_install_cmd.append("--set")
+        helm_install_cmd.append("persistence.enabled=false")
+
+    # Deploy helm chart
+    res = run_command(helm_install_cmd)
     return res
+
+
 
 
 async def request_deploy_cnf(cnf_name, params):

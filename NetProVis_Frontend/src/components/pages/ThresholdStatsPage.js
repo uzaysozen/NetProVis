@@ -107,7 +107,7 @@ const ThresholdStatsPage = () => {
             bold: true, // Make title bold
             italic: false, // Make title not italic
         },
-        pointSize: 1,
+        pointSize: 0,
         hAxis: {
             title: "Time",
             titleTextStyle: {
