@@ -24,7 +24,7 @@ const BigResourceChart = ({reload, pods}) => {
             italic: false, // Make title not italic
         },
         colors: ['#00e5ff', '#ff00ff'],
-        pointSize: 1,
+        pointSize: 0,
         hAxis: {
             title: "Time",
             titleTextStyle: {
